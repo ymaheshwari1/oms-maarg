@@ -1409,33 +1409,28 @@ under the License.
                     <continue/>
                 </if>
 
-                <entity-find entity-name="org.apache.ofbiz.order.order.OrderItem" list="orderItemList">
-                    <econdition field-name="orderId" from="orderId"/>
-                </entity-find>
-                <set field="orderItemBySeq" from="orderItemList.collectEntries{[(it.orderItemSeqId): it]}"/>
                 <entity-find entity-name="org.apache.ofbiz.order.order.OrderItemShipGroup" list="shipGroupList">
                     <econdition field-name="orderId" from="orderId"/>
                 </entity-find>
                 <set field="shipGroupBySeq" from="shipGroupList.collectEntries{[(it.shipGroupSeqId): it]}"/>
 
-                <entity-find entity-name="org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc" list="assocList">
+                <entity-find entity-name="org.apache.ofbiz.order.order.OrderItem" list="targetItems">
                     <econdition field-name="orderId" from="orderId"/>
                     <econdition field-name="orderItemSeqId" operator="in" from="orderItemSeqIds"/>
                 </entity-find>
-                <set field="filteredAssocs" from="[]"/>
-                <iterate list="assocList" entry="assoc">
-                    <set field="assocItem" from="orderItemBySeq[assoc.orderItemSeqId]"/>
-                    <set field="assocShipGroup" from="shipGroupBySeq[assoc.shipGroupSeqId]"/>
-                    <if condition="!assocItem || !assocShipGroup"><continue/></if>
-                    <if condition="assocShipGroup.facilityId != '_NA_'"><continue/></if>
-                    <if condition="['ITEM_CANCELLED','ITEM_COMPLETED'].contains(assocItem.statusId)"><continue/></if>
-                    <set field="filteredAssocs" from="filteredAssocs + [assoc]"/>
+                <set field="eligibleItems" from="[]"/>
+                <iterate list="targetItems" entry="targetItem">
+                    <set field="itemShipGroup" from="shipGroupBySeq[targetItem.shipGroupSeqId]"/>
+                    <if condition="!itemShipGroup"><continue/></if>
+                    <if condition="itemShipGroup.facilityId != '_NA_'"><continue/></if>
+                    <if condition="['ITEM_CANCELLED','ITEM_COMPLETED'].contains(targetItem.statusId)"><continue/></if>
+                    <set field="eligibleItems" from="eligibleItems + [targetItem]"/>
                 </iterate>
-                <if condition="!filteredAssocs"><continue/></if>
+                <if condition="!eligibleItems"><continue/></if>
 
-                <set field="shipGroupSeqIds" from="filteredAssocs*.shipGroupSeqId.findAll{it}.unique()"/>
+                <set field="shipGroupSeqIds" from="eligibleItems*.shipGroupSeqId.findAll{it}.unique()"/>
                 <iterate list="shipGroupSeqIds" entry="shipGroupSeqId">
-                    <set field="groupItemSeqIds" from="filteredAssocs.findAll{it.shipGroupSeqId == shipGroupSeqId}*.orderItemSeqId.findAll{it}.unique()"/>
+                    <set field="groupItemSeqIds" from="eligibleItems.findAll{it.shipGroupSeqId == shipGroupSeqId}*.orderItemSeqId.findAll{it}.unique()"/>
                     <if condition="!groupItemSeqIds"><continue/></if>
 
                     <entity-find entity-name="org.apache.ofbiz.order.order.OrderItemShipGroup" list="existingGroupList" limit="1">
@@ -1446,7 +1441,7 @@ under the License.
                     <set field="newShipGroupSeqId" from="existingGroup?.shipGroupSeqId"/>
 
                     <if condition="!newShipGroupSeqId">
-                        <entity-find-count entity-name="org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc" count-field="remainingCount">
+                        <entity-find-count entity-name="org.apache.ofbiz.order.order.OrderItem" count-field="remainingCount">
                             <econdition field-name="orderId" from="orderId"/>
                             <econdition field-name="shipGroupSeqId" from="shipGroupSeqId"/>
                             <econdition field-name="orderItemSeqId" operator="not-in" from="groupItemSeqIds"/>
@@ -1476,23 +1471,6 @@ under the License.
 
                     <if condition="newShipGroupSeqId &amp;&amp; newShipGroupSeqId != shipGroupSeqId">
                         <iterate list="groupItemSeqIds" entry="orderItemSeqId">
-                            <entity-find-one entity-name="org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc" value-field="assocRecord">
-                                <field-map field-name="orderId" from="orderId"/>
-                                <field-map field-name="orderItemSeqId" from="orderItemSeqId"/>
-                                <field-map field-name="shipGroupSeqId" from="shipGroupSeqId"/>
-                            </entity-find-one>
-                            <if condition="!assocRecord"><continue/></if>
-                            <entity-find-one entity-name="org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc" value-field="existingAssoc">
-                                <field-map field-name="orderId" from="orderId"/>
-                                <field-map field-name="orderItemSeqId" from="orderItemSeqId"/>
-                                <field-map field-name="shipGroupSeqId" from="newShipGroupSeqId"/>
-                            </entity-find-one>
-                            <if condition="!existingAssoc">
-                                <service-call name="create#org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc"
-                                              in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId, shipGroupSeqId:newShipGroupSeqId, quantity:assocRecord.quantity, cancelQuantity:assocRecord.cancelQuantity]"/>
-                            </if>
-                            <service-call name="delete#org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc"
-                                          in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId, shipGroupSeqId:shipGroupSeqId]"/>
                             <service-call name="update#org.apache.ofbiz.order.order.OrderItem"
                                           in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId, shipGroupSeqId:newShipGroupSeqId]"/>
                         </iterate>
@@ -1525,55 +1503,53 @@ under the License.
                 <econdition field-name="orderId" from="orderId"/>
                 <econdition field-name="facilityId" operator="in" from="facilityIds"/>
             </entity-find>
-            <iterate list="shipGroupList" entry="shipGroup">
-                <entity-find entity-name="org.apache.ofbiz.order.order.OldOrderItemShipGroupAssoc" list="assocs">
+            <set field="shipGroupSeqIds" from="shipGroupList*.shipGroupSeqId.findAll{it}"/>
+            <if condition="!shipGroupSeqIds"><return/></if>
+
+            <entity-find entity-name="org.apache.ofbiz.order.order.OrderItem" list="orderItems">
+                <econdition field-name="orderId" from="orderId"/>
+                <econdition field-name="shipGroupSeqId" operator="in" from="shipGroupSeqIds"/>
+            </entity-find>
+
+            <iterate list="orderItems" entry="orderItem">
+                <if condition="orderItem.correspondingPoId"><continue/></if>
+                <entity-find entity-name="org.apache.ofbiz.order.order.OrderItemAttribute" list="orderItemAttrList" limit="1">
                     <econdition field-name="orderId" from="orderId"/>
-                    <econdition field-name="shipGroupSeqId" from="shipGroup.shipGroupSeqId"/>
+                    <econdition field-name="orderItemSeqId" from="orderItem.orderItemSeqId"/>
+                    <econdition field-name="attrName" operator="in" from="['PreOrderItemProperty','BackOrderItemProperty']"/>
                 </entity-find>
-                <iterate list="assocs" entry="assoc">
-                    <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderItem" value-field="orderItem">
-                        <field-map field-name="orderId" from="orderId"/>
-                        <field-map field-name="orderItemSeqId" from="assoc.orderItemSeqId"/>
+                <if condition="!orderItemAttrList"><continue/></if>
+                <set field="orderItemQuantity" from="(orderItem.quantity ?: 0) - (orderItem.cancelQuantity ?: 0)"/>
+                <if condition="!orderItemQuantity || orderItemQuantity &lt;= 0"><continue/></if>
+
+                <entity-find entity-name="org.apache.ofbiz.order.order.OrderItem" list="poItemList">
+                    <econdition field-name="productId" from="orderItem.productId"/>
+                    <econdition field-name="availableToPromise" operator="greater" value="0"/>
+                    <econdition field-name="estimatedDeliveryDate" operator="is-not-null"/>
+                    <order-by field-name="estimatedDeliveryDate"/>
+                </entity-find>
+                <set field="candidate" from="null"/>
+                <iterate list="poItemList" entry="poItem">
+                    <if condition="candidate"><continue/></if>
+                    <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderHeader" value-field="poHeader">
+                        <field-map field-name="orderId" from="poItem.orderId"/>
                     </entity-find-one>
-                    <if condition="!orderItem || orderItem.correspondingPoId"><continue/></if>
-                    <entity-find entity-name="org.apache.ofbiz.order.order.OrderItemAttribute" list="orderItemAttrList" limit="1">
-                        <econdition field-name="orderId" from="orderId"/>
-                        <econdition field-name="orderItemSeqId" from="assoc.orderItemSeqId"/>
-                        <econdition field-name="attrName" operator="in" from="['PreOrderItemProperty','BackOrderItemProperty']"/>
-                    </entity-find>
-                    <if condition="!orderItemAttrList"><continue/></if>
-                    <set field="orderItemQuantity" from="(assoc.quantity ?: orderItem.quantity) - (assoc.cancelQuantity ?: 0)"/>
-                    <if condition="!orderItemQuantity || orderItemQuantity &lt;= 0"><continue/></if>
-
-                    <entity-find entity-name="org.apache.ofbiz.order.order.OrderItem" list="poItemList">
-                        <econdition field-name="productId" from="orderItem.productId"/>
-                        <econdition field-name="availableToPromise" operator="greater" value="0"/>
-                        <econdition field-name="estimatedDeliveryDate" operator="is-not-null"/>
-                        <order-by field-name="estimatedDeliveryDate"/>
-                    </entity-find>
-                    <set field="candidate" from="null"/>
-                    <iterate list="poItemList" entry="poItem">
-                        <if condition="candidate"><continue/></if>
-                        <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderHeader" value-field="poHeader">
-                            <field-map field-name="orderId" from="poItem.orderId"/>
-                        </entity-find-one>
-                        <if condition="!poHeader"><continue/></if>
-                        <if condition="poHeader.orderTypeId != 'PURCHASE_ORDER'"><continue/></if>
-                        <if condition="['ORDER_CANCELLED','ORDER_COMPLETED','ORDER_REJECTED'].contains(poHeader.statusId)"><continue/></if>
-                        <if condition="poItem.availableToPromise &gt;= orderItemQuantity">
-                            <set field="candidate" from="poItem"/>
-                        </if>
-                    </iterate>
-                    <if condition="!candidate"><continue/></if>
-
-                    <service-call name="update#org.apache.ofbiz.order.order.OrderItem"
-                                  in-map="[orderId:orderId, orderItemSeqId:orderItem.orderItemSeqId, promisedDatetime:candidate.estimatedDeliveryDate,
-                                    correspondingPoId:candidate.orderId, autoCancelDate:null, isNewProduct:candidate.isNewProduct]"/>
-                    <set field="newAtp" from="candidate.availableToPromise - orderItemQuantity"/>
-                    <if condition="newAtp &lt; 0"><set field="newAtp" from="0"/></if>
-                    <service-call name="update#org.apache.ofbiz.order.order.OrderItem"
-                                  in-map="[orderId:candidate.orderId, orderItemSeqId:candidate.orderItemSeqId, availableToPromise:newAtp]"/>
+                    <if condition="!poHeader"><continue/></if>
+                    <if condition="poHeader.orderTypeId != 'PURCHASE_ORDER'"><continue/></if>
+                    <if condition="['ORDER_CANCELLED','ORDER_COMPLETED','ORDER_REJECTED'].contains(poHeader.statusId)"><continue/></if>
+                    <if condition="poItem.availableToPromise &gt;= orderItemQuantity">
+                        <set field="candidate" from="poItem"/>
+                    </if>
                 </iterate>
+                <if condition="!candidate"><continue/></if>
+
+                <service-call name="update#org.apache.ofbiz.order.order.OrderItem"
+                              in-map="[orderId:orderId, orderItemSeqId:orderItem.orderItemSeqId, promisedDatetime:candidate.estimatedDeliveryDate,
+                                correspondingPoId:candidate.orderId, autoCancelDate:null, isNewProduct:candidate.isNewProduct]"/>
+                <set field="newAtp" from="candidate.availableToPromise - orderItemQuantity"/>
+                <if condition="newAtp &lt; 0"><set field="newAtp" from="0"/></if>
+                <service-call name="update#org.apache.ofbiz.order.order.OrderItem"
+                              in-map="[orderId:candidate.orderId, orderItemSeqId:candidate.orderItemSeqId, availableToPromise:newAtp]"/>
             </iterate>
         </actions>
     </service>
