@@ -29,6 +29,7 @@
         <fields fieldSeqId="32" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:org.apache.ofbiz.product.facility.Facility:facilityName" fieldNameAlias="facilityName"/>
         <fields fieldSeqId="33" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:shipmentMethodTypeId"/>
         <fields fieldSeqId="34" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:org.apache.ofbiz.shipment.shipment.ShipmentMethodType:description" fieldNameAlias="shipmentMethodDesc"/>
+        <fields fieldSeqId="35" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:org.apache.ofbiz.product.facility.Facility:facilityTypeId" fieldNameAlias="facilityTypeId"/>
 
         <fields fieldSeqId="40" fieldPath="org.apache.ofbiz.order.order.OrderHeader:paymentPreferences:paymentMethodTypeId"/>
         <fields fieldSeqId="41" fieldPath="org.apache.ofbiz.order.order.OrderHeader:paymentPreferences:org.apache.ofbiz.accounting.payment.PaymentMethodType:description" fieldNameAlias="paymentMethodDesc"/>
@@ -41,11 +42,16 @@
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
 
         <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:orderItemSeqId"/>
-        <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:productId" fieldNameAlias="sku"/>
+        <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:productId" fieldNameAlias="productId"/>
         <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:quantity"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
         <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
+
+        <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
+        <relAliases relationshipName="contactMechs" documentAlias="billContacts"/>
+        <relAliases relationshipName="adjustments" documentAlias="adjustments"/>
+        <relAliases relationshipName="shipGroups" documentAlias="shipGroups"/>
 
     </dataDocuments>
 
@@ -90,7 +96,7 @@
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
 
-        <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:productId" fieldNameAlias="sku"/>
+        <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:quantity"/>
         <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
@@ -110,7 +116,7 @@
         <fields fieldSeqId="01" fieldPath="orderId"/>
         <fields fieldSeqId="02" fieldPath="orderItemSeqId"/>
         <fields fieldSeqId="03" fieldPath="statusId" fieldNameAlias="itemStatusId"/>
-        <fields fieldSeqId="04" fieldPath="shipGroupSeqId"/>
+        <fields fieldSeqId="04" fieldPath="shipGroupSeqId" fieldNameAlias="itemShipGroupSeqId"/>
         <fields fieldSeqId="05" fieldPath="lastUpdatedStamp" fieldNameAlias="eventDate"/>
         <fields fieldSeqId="06" fieldPath="changeByUserLoginId" fieldNameAlias="eventUserLoginId"/>
 
@@ -140,8 +146,7 @@
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
-
-        <fields fieldSeqId="70" fieldPath="productId" fieldNameAlias="sku"/>
+        <fields fieldSeqId="70" fieldPath="productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="quantity"/>
         <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
@@ -149,6 +154,8 @@
 
         <fields fieldSeqId="80" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:reasonEnumId" fieldNameAlias="rejectionReasonId"/>
         <fields fieldSeqId="81" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:org.apache.ofbiz.product.inventory.InventoryItemVariance:reasonEnumId" fieldNameAlias="varianceReasonEnumId"/>
+        <fields fieldSeqId="82" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItem:facilityId" fieldNameAlias="brokerFacilityId"/>
+        <fields fieldSeqId="83" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItem:org.apache.ofbiz.product.facility.Facility:facilityName" fieldNameAlias="brokerFacilityName"/>
 
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
         <relAliases relationshipName="contactMechs" documentAlias="billContacts"/>
