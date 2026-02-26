@@ -537,7 +537,7 @@
 
             <!-- WEBHOOK ORDER ITEM -->
             <if condition="docType == 'WebhookOrderItem'">
-                <if condition="doc.itemStatusId in ['ITEM_BROKERED', 'ITEM_APPROVED', 'ORDER_APPROVED']">
+                <if condition="doc.itemStatusId in ['ITEM_BROKERED', 'ITEM_APPROVED']">
                     <set field="topicEnumId" from="'ITEM_BROKERED'"/>
                 </if>
                 <if condition="doc.itemStatusId in ['ITEM_REJECTED', 'ORDER_REJECTED']">
@@ -619,12 +619,9 @@
                          shipGroup = doc.shipGroups.find { sg ->
                              if (!sg.facilityId) return false
                              def fac = ec.entity.find('org.apache.ofbiz.product.facility.Facility').condition('facilityId', sg.facilityId).useCache(true).one()
-                             // Filter out pseudo-facilities like Brokering Queue or Parking that are of type NA or VIRTUAL_FACILITY
                              return fac && fac.facilityTypeId && !['NA', 'VIRTUAL_FACILITY'].contains(fac.facilityTypeId)
                          } ?: doc.shipGroups[0]
                      ]]></script>
-                     <!-- Use the unambiguous alias itemShipGroupSeqId from DataDoc (OrderItem.shipGroupSeqId)
-                          itemSgSeqId is already resolved and normalised in the dispatch guard above; reuse it -->
                      <set field="itemShipGroupSeqId" from="itemSgSeqId ?: (doc.itemShipGroupSeqId instanceof List ? doc.itemShipGroupSeqId.find{it} : doc.itemShipGroupSeqId)"/>
                      <if condition="itemShipGroupSeqId">
                         <log level="info" message=">>> [WebhookServices] shipGroup match: itemShipGroupSeqId=${itemShipGroupSeqId}, shipGroups=${doc.shipGroups?.collect{it.shipGroupSeqId+':'+it.facilityId}}"/>
@@ -747,16 +744,10 @@
                     ])
                     if (!payload.shipping_method) payload.put('shipping_method', shipGroup?.shipmentMethodDesc ?: shipGroup?.shipmentMethodTypeId)
 
-                    // For ITEM_BROKERED: resolve facility from OrderItem.shipGroupSeqId → OrderItemShipGroup.facilityId
-                    // This is the authoritative path: brokering engine sets SHIP_GROUP_SEQ_ID on OrderItem and FACILITY_ID
-                    // on the ship group BEFORE changing the item status to ITEM_BROKERED (which fires this webhook).
-                    // OrderFacilityChange is NOT used here — it may contain stale/newer rejection records.
+                    // For ITEM_BROKERED: resolve facility from OrderItem.shipGroupSeqId
                     if ((!payload.facility_id || payload.facility_id == '_NA_') && topicEnumId == 'ITEM_BROKERED' && orderId) {
-                        // itemShipGroupSeqId is already a normalised scalar from the XML <set> above
                         def oiShipGroupSeqId = itemShipGroupSeqId
 
-                        // If DataDoc field was null (edge case: OrderItem.SHIP_GROUP_SEQ_ID not set yet),
-                        // do a direct runtime lookup from OrderItem
                         if (!oiShipGroupSeqId) {
                             def oiSeqId = doc.orderItemSeqId instanceof List ? doc.orderItemSeqId.find{it} : doc.orderItemSeqId
                             def liveOrderItem = ec.entity.find('org.apache.ofbiz.order.order.OrderItem')
@@ -764,14 +755,11 @@
                             oiShipGroupSeqId = liveOrderItem?.shipGroupSeqId
                         }
 
-                        ec.logger.info(">>> [WebhookServices] ITEM_BROKERED facility lookup: orderId=${orderId}, oiShipGroupSeqId=${oiShipGroupSeqId}")
-
                         if (oiShipGroupSeqId) {
                             def oiShipGroup = ec.entity.find('org.apache.ofbiz.order.order.OrderItemShipGroup')
                                 .condition('orderId', orderId)
                                 .condition('shipGroupSeqId', oiShipGroupSeqId)
                                 .useCache(false).one()
-                            ec.logger.info(">>> [WebhookServices] OrderItemShipGroup: shipGroupSeqId=${oiShipGroupSeqId}, facilityId=${oiShipGroup?.facilityId}")
                             if (oiShipGroup?.facilityId) {
                                 def brokerFac = ec.entity.find('org.apache.ofbiz.product.facility.Facility')
                                     .condition('facilityId', oiShipGroup.facilityId).useCache(true).one()
@@ -781,7 +769,6 @@
                                 }
                             }
                         }
-                        ec.logger.info(">>> [WebhookServices] ITEM_BROKERED final facility: id=${payload.facility_id}, name=${payload.facility_name}")
                     }
 
                     // Fallback: resolve payment_type directly if DataDocument join returned null
@@ -794,6 +781,23 @@
                                 .useCache(true).one()
                             if (pmtType) payload.put('payment_type', pmtType.description)
                         }
+                    }
+                    
+                    // Fallback: Resolve missing user_id for ORDER events (like ORDER_CREATED)
+                    if (!payload.user_id && orderId && docType == 'WebhookOrderStatus') {
+                        def lastUserLoginId = ec.entity.find('org.apache.ofbiz.order.order.OrderStatus')
+                            .condition('orderId', orderId)
+                            .condition('orderItemSeqId', 'is-null', null)
+                            .condition('statusUserLogin', 'is-not-null', null)
+                            .orderBy('-statusDatetime').orderBy('-lastUpdatedStamp').limit(1).one()?.statusUserLogin
+                        
+                        // Default to the user who created the order if no statusUserLogin is found
+                        if (!lastUserLoginId) {
+                            lastUserLoginId = ec.entity.find('org.apache.ofbiz.order.order.OrderHeader').condition('orderId', orderId).one()?.createdBy
+                        }
+                        
+                        if (lastUserLoginId) payload.put('user_id', lastUserLoginId)
+                        else payload.put('user_id', 'system')
                     }
 
                     // Add user_id and rejection_reason for ITEM_REJECTED / ITEM_BROKERED

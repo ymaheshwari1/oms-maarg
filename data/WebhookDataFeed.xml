@@ -165,9 +165,9 @@
     <moqui.entity.feed.DataFeed dataFeedId="WebhookEvents" dataFeedTypeEnumId="DTFDTP_RT_PUSH"
             feedName="Webhook Events Feed"
             feedReceiveServiceName="co.hotwax.webhook.WebhookServices.receive#WebhookEvents">
-        <documents dataDocumentId="WebhookOrderStatus" feedStampField="lastUpdatedStamp" feedTrigger="INSERT"/>
-        <documents dataDocumentId="WebhookShipmentStatus" feedStampField="lastUpdatedStamp" feedTrigger="INSERT"/>
-        <documents dataDocumentId="WebhookOrderItem" feedStampField="lastUpdatedStamp" feedTrigger="UPDATE"/>
+        <documents dataDocumentId="WebhookOrderStatus" />
+        <documents dataDocumentId="WebhookShipmentStatus" />
+        <documents dataDocumentId="WebhookOrderItem" />
     </moqui.entity.feed.DataFeed>
 
 </entity-facade-xml>
