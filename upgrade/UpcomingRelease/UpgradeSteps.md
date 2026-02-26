@@ -13,7 +13,7 @@ Follow these steps to configure webhook endpoints for any external system.
     topicEnumId="[WEBHOOK_TOPIC]"
     remoteUrl="[ENDPOINT_URL]"
     sharedSecret="[SECURE_KEY]"
-    description="[OPTIONAL_DESCRIPTION]"/>
+    />
 ```
 *   `webhookConfigId`: A unique ID for this configuration (e.g., `CLIENT_ORDER_CREATED`).
 *   `topicEnumId`: The specific business event to subscribe to.
@@ -46,24 +46,24 @@ Follow these steps to configure webhook endpoints for any external system.
         topicEnumId="ORDER_CREATED"
         remoteUrl="https://[DOMAIN]/webhooks/order-created"
         sharedSecret="[SHARED_SECRET]"
-        description="Order Created Webhook"/>
+        />
 
     <co.hotwax.common.WebhookConfig webhookConfigId="[CLIENT_ID]_ORDER_APPROVED"
         topicEnumId="ORDER_APPROVED"
         remoteUrl="https://[DOMAIN]/webhooks/order-approved"
         sharedSecret="[SHARED_SECRET]"
-        description="Order Approved Webhook"/>
+        />
 
     <co.hotwax.common.WebhookConfig webhookConfigId="[CLIENT_ID]_ORDER_COMPLETED"
         topicEnumId="ORDER_COMPLETED"
         remoteUrl="https://[DOMAIN]/webhooks/order-completed"
         sharedSecret="[SHARED_SECRET]"
-        description="Order Completed Webhook"/>
+        />
 
     <co.hotwax.common.WebhookConfig webhookConfigId="[CLIENT_ID]_SHIPMENT_SHIPPED"
         topicEnumId="SHIPMENT_SHIPPED"
         remoteUrl="https://[DOMAIN]/webhooks/shipment-shipped"
         sharedSecret="[SHARED_SECRET]"
-        description="Shipment Shipped Webhook"/>
+        />
 </entity-facade-xml>
 ```
