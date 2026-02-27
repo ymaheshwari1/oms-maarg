@@ -94,8 +94,8 @@ under the License.
         <field name="conditionSeqId" type="id" is-pk="true"><description>Unique identifier for the rule inventory condition.</description></field>
         <field name="conditionTypeEnumId" type="id"><description>Type of condition (Filter/ Order by)</description></field>
         <field name="fieldName" type="text-medium" enable-audit-log="true"><description>Input parameter for the condition.</description></field>
-        <field name="operator" type="text-medium" enable-audit-log="true"><description>Operator used in the condition, used to identify exclude and include conditions</description></field>
-        <field name="joinOperator" type="text-medium" enable-audit-log="true"><description>Operator used to join values in the condition</description></field>
+        <field name="operator" type="text-medium" enable-audit-log="true"><description>Operator used in the condition</description></field>
+        <field name="joinOperator" type="text-medium" enable-audit-log="true"><description>Operator used to join values in the condition, if null, operator field will be used to identify the join operator</description></field>
         <field name="fieldValue" type="text-long" enable-audit-log="true"><description>Value of the condition.</description></field>
         <field name="sequenceNum" type="number-integer" enable-audit-log="true"><description>Sequence number for ordering.</description></field>
         <field name="createdDate" type="date-time"><description>Date and time when the condition was created.</description></field>
