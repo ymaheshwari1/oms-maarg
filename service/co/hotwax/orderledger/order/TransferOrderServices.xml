@@ -229,6 +229,176 @@
         </actions>
     </service>
 
+    <service verb="import" noun="TransferOrder">
+        <in-parameters>
+            <parameter name="externalOrderId" required="true"/>
+            <parameter name="originFacilityId"/>
+            <parameter name="destinationFacilityId"/>
+            <parameter name="sku"/>
+            <parameter name="quantity" type="BigDecimal"/>
+            <parameter name="orderName"/>
+            <parameter name="productStoreId"/>
+            <parameter name="carrierPartyId"/>
+            <parameter name="shipmentMethodTypeId"/>
+            <parameter name="statusFlowId"/>
+            <parameter name="shipDate"/>
+            <parameter name="deliveryDate"/>
+        </in-parameters>
+        <actions>
+            <script>
+                import java.time.format.DateTimeFormatter
+                import java.time.format.DateTimeParseException
+                import java.time.DateTimeException
+                import java.time.LocalDateTime
+            </script>
+            <set field="errorList" type="List" from="[]"/>
+            <entity-find entity-name="org.apache.ofbiz.product.facility.Facility" list="originFacilities" cache="true">
+                <econdition field-name="facilityId" from="originFacilityId"/>
+            </entity-find>
+
+            <if condition="!originFacilities">
+                <script>errorList.add("Origin Facility [externalFacilityId: ${originFacilityId}] not found")</script>
+            </if>
+
+            <entity-find entity-name="org.apache.ofbiz.product.facility.Facility" list="destinationFacilities" cache="true">
+                <econdition field-name="facilityId" from="destinationFacilityId"/>
+            </entity-find>
+            <if condition="!destinationFacilities">
+                <script>errorList.add("Destination Facility [externalFacilityId: ${destinationFacilityId}] not found")</script>
+            </if>
+
+            <entity-find entity-name="org.apache.ofbiz.product.product.GoodIdentification" list="goodIdentifications">
+                <econdition field-name="goodIdentificationTypeId" value="SKU"/>
+                <econdition field-name="idValue" from="sku"/>
+                <date-filter/>
+                <order-by field-name="fromDate"/>
+            </entity-find>
+
+            <if condition="!goodIdentifications">
+                <script>errorList.add("Product [SKU: ${sku}] not found")</script>
+            </if>
+
+            <entity-find-one entity-name="org.apache.ofbiz.shipment.shipment.CarrierShipmentMethod" value-field="carrierShipmentMethod" cache="true">
+                <field-map field-name="shipmentMethodTypeId"/>
+                <field-map field-name="partyId" from="carrierPartyId"/>
+                <field-map field-name="roleTypeId" value="CARRIER"/>
+            </entity-find-one>
+
+            <if condition="!carrierShipmentMethod">
+                <script>errorList.add("Carrier Shipment Method Association [Carrier: ${carrierPartyId}, Shipment Method Type: ${shipmentMethodTypeId}] not found")</script>
+            </if>
+
+            <entity-find-one entity-name="moqui.basic.StatusFlow" value-field="statusFlow" cache="true">
+                <field-map field-name="statusFlowId"/>
+            </entity-find-one>
+
+            <if condition="!statusFlow">
+                <script>errorList.add("Status Flow [statusFlowId: ${statusFlowId}] not found")</script>
+            </if>
+
+            <if condition="shipDate">
+                <script><![CDATA[
+                    try {
+                        shipDate = LocalDateTime.parse(shipDate, DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"))
+                        shipDate = shipDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    } catch (DateTimeParseException e) {
+                        errorList.add("Error formatting shipDate: ${shipDate} from MM-dd-yyyy HH:mm:ss to yyyy-MM-dd HH:mm:ss, ${e}")
+                    } catch (DateTimeException e) {
+                        errorList.add("Error formatting shipDate: ${shipDate} from MM-dd-yyyy HH:mm:ss to yyyy-MM-dd HH:mm:ss, ${e}")
+                    }
+                    ]]></script>
+            </if>
+
+            <if condition="deliveryDate">
+                <script><![CDATA[
+                    try {
+                        deliveryDate = LocalDateTime.parse(deliveryDate, DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"))
+                        deliveryDate = deliveryDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    } catch (DateTimeParseException e) {
+                        errorList.add("Error formatting deliveryDate: ${deliveryDate} from MM-dd-yyyy HH:mm:ss to yyyy-MM-dd HH:mm:ss, ${e}")
+                    } catch (DateTimeException e) {
+                        errorList.add("Error formatting deliveryDate: ${deliveryDate} from MM-dd-yyyy HH:mm:ss to yyyy-MM-dd HH:mm:ss, ${e}")
+                    }
+                    ]]></script>
+            </if>
+
+            <entity-find-one entity-name="org.apache.ofbiz.product.store.ProductStore" value-field="productStore" cache="true">
+                <field-map field-name="productStoreId"/>
+            </entity-find-one>
+
+            <if condition="!productStore">
+                <script>errorList.add("ProductStore [productStoreId: ${productStoreId} not found]")</script>
+            </if>
+
+            <if condition="errorList">
+                <return error="true" message="${errorList.join(', ')}"/>
+            </if>
+
+            <entity-find entity-name="org.apache.ofbiz.order.order.OrderHeader" list="orderHeaders">
+                <econdition field-name="externalId" from="externalOrderId"/>
+                <econdition field-name="statusId" value="ORDER_CREATED"/>
+            </entity-find>
+
+            <set field="productId" from="goodIdentifications[0].productId"/>
+            <entity-find entity-name="org.apache.ofbiz.product.price.ProductPrice" cache="true" list="prices">
+                <econdition field-name="productId"/>
+                <econdition field-name="productPriceTypeId" value="LIST_PRICE"/>
+                <econdition field-name="currencyUomId" from="productStore.defaultCurrencyUomId"/>
+                <date-filter/>
+            </entity-find>
+            <if condition="!orderHeaders">
+                <set field="originFacilityId" from="originFacilities[0].facilityId"/>
+                <set field="destinationFacilityId" from="destinationFacilities[0].facilityId"/>
+                <entity-find entity-name="org.apache.ofbiz.product.facility.FacilityContactMechPurpose" list="destFacilityContacts" cache="true">
+                    <econdition field-name="facilityId" from="destinationFacilityId"/>
+                    <econdition field-name="contactMechPurposeTypeId" operator="in" value="PRIMARY_LOCATION,PRIMARY_PHONE"/>
+                    <date-filter/>
+                </entity-find>
+                <service-call name="create#org.apache.ofbiz.order.order.OrderHeader" in-map="[
+                orderName: orderName,
+                statusId: 'ORDER_CREATED',
+                externalId: externalOrderId,
+                grandTotal: (prices?[0].price?: BigDecimal.ZERO).multiply(quantity?: BigDecimal.ZERO),
+                productStoreId: productStoreId,
+                orderDate: ec.user.nowTimestamp,
+                entryDate: ec.user.nowTimestamp,
+                statusFlowId: statusFlowId,
+                orderTypeId: 'TRANSFER_ORDER',
+                originFacilityId: originFacilityId,
+                currencyUom: productStore.defaultCurrencyUomId,
+                'org.apache.ofbiz.order.order.OrderStatus': [statusId: 'ORDER_CREATED', statusDatetime: ec.user.nowTimestamp, statusUserLogin: ec.user.username],
+                shipGroups: [
+                    facilityId: originFacilityId,
+                    orderFacilityId: destinationFacilityId,
+                    carrierPartyId: partyId,
+                    carrierRoleTypeId: 'CARRIER',
+                    contactMechId: destFacilityContacts.find { it.contactMechPurposeTypeId == 'PRIMARY_LOCATION' }?.contactMechId,
+                    telecomContactMechId: destFacilityContacts.find { it.contactMechPurposeTypeId == 'PRIMARY_PHONE' }?.contactMechId,
+                    estimatedShipDate: shipDate,
+                    estimatedDeliveryDate: deliveryDate,
+                    items: [[productId: productId, orderItemTypeId: 'PRODUCT_ORDER_ITEM', statusId: 'ITEM_CREATED', unitPrice: prices?[0].price?: 0, quantity: quantity?: 0,
+                        'org.apache.ofbiz.order.order.OrderStatus': [statusId: 'ITEM_CREATED', statusDatetime: ec.user.nowTimestamp, statusUserLogin: ec.user.username]
+                    ]]
+                ]
+            ]" out-map="orderHeader"/>
+                <else>
+                    <service-call name="create#org.apache.ofbiz.order.order.OrderItem" in-map="[
+                    orderId: orderHeaders[0].orderId,
+                    productId: productId,
+                    orderItemTypeId: 'PRODUCT_ORDER_ITEM',
+                    statusId: 'ITEM_CREATED',
+                    unitPrice: prices?[0].price?: 0,
+                    quantity: quantity?: 0,
+                    'org.apache.ofbiz.order.order.OrderStatus': [orderId: orderHeaders[0].orderId, statusId: 'ITEM_CREATED', statusDatetime: ec.user.nowTimestamp, statusUserLogin: ec.user.username]
+                ]"/>
+                    <set field="orderHeaders[0].grandTotal"
+                         from="(orderHeaders[0].grandTotal ?: BigDecimal.ZERO).add((prices?[0].price ?: BigDecimal.ZERO).multiply(quantity ?: BigDecimal.ZERO))"/>
+                    <service-call name="store#org.apache.ofbiz.order.order.OrderHeader" in-map="orderHeaders[0]"/>
+                </else>
+            </if>
+        </actions>
+    </service>
+
     <service verb="bulkApprove" noun="StoreFulfillTransferOrders" transaction-timeout="3600" authenticate="anonymous-all">
         <description>
             Service to bulk approve transfer orders where fulfillment is done by OMS i.e. Store to Store and Store to Warehouse Transfer Orders.
