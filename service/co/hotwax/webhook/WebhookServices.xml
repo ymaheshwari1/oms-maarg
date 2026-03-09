@@ -91,8 +91,11 @@
 
                     <set field="messageText" from="org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(payload)"/>
 
-                    <!-- 4. Create SystemMessage for audit and status tracking -->
+                    <!-- 4. Create SystemMessage for audit and status tracking.
+                         Use require-new-transaction so it commits immediately before send#WebhookNotification
+                         tries to read/update it in its own require-new-transaction calls. -->
                     <service-call name="create#moqui.service.message.SystemMessage" out-map="createSmsgOut"
+                                  require-new-transaction="true"
                                   in-map="[systemMessageTypeId: 'WebhookNotification',
                                            messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced',
                                            docControl: (orderId ?: shipmentId)]"/>
@@ -247,7 +250,6 @@
         <in-parameters>
             <parameter name="doc" type="Map" required="true"/>
             <parameter name="feedStamp" type="Timestamp"/>
-            <parameter name="allowOrderCompleted" type="Boolean" default-value="false"/>
         </in-parameters>
         <actions>
             <set field="docType" from="doc._type"/>
@@ -279,7 +281,7 @@
                     <set field="eventOrderItemSeqId" from="null"/>
                 </if>
 
-                <!-- Single query (limit 2) serves both previousStatus AND isLatestOrderStatusEvent - eliminates second DB hit -->
+                <!-- Single query (limit 2) serves to get previousStatus -->
                 <if condition="orderId">
                     <entity-find entity-name="org.apache.ofbiz.order.order.OrderStatus" list="statusHistory" limit="2">
                         <econdition field-name="orderId" from="orderId"/>
@@ -288,8 +290,7 @@
                         <order-by field-name="-statusDatetime"/>
                         <order-by field-name="-orderStatusId"/>
                     </entity-find>
-                    <!-- [0]=latest, [1]=previous; reused by isLatestOrderStatusEvent check below (no extra DB query) -->
-                    <set field="latestOrderStatus" from="statusHistory ? statusHistory[0] : null"/>
+                    <!-- [0]=latest, [1]=previous -->
                     <set field="previousStatus" from="statusHistory?.size() > 1 ? statusHistory[1].statusId : null"/>
                     
                     <!-- Fallback if fields missing in doc -->
@@ -311,41 +312,10 @@
                     </if>
                 </if>
                 
-                <!-- Freshness Checks -->
-                <set field="isLatestOrderStatusEvent" from="false"/>
-                <set field="isFreshOrderStatusEvent" from="false"/>
-                <set field="isNotFutureOrderStatusEvent" from="false"/>
-                <if condition="orderId &amp;&amp; !eventOrderItemSeqId">
-                    <!-- Reuse statusHistory[0] fetched above — no second DB query needed -->
-                    <if condition="latestOrderStatus &amp;&amp; eventOrderStatusId == latestOrderStatus.orderStatusId">
-                        <set field="isLatestOrderStatusEvent" from="true"/>
-                    </if>
-                    <set field="freshTs" from="eventStatusLastUpdatedStamp ?: feedStamp ?: eventStatusDatetime"/>
-                    <set field="freshCutoff" from="new java.sql.Timestamp(ec.user.nowTimestamp.time - (30L * 60L * 1000L))"/>
-                    <if condition="freshTs &amp;&amp; freshTs &gt;= freshCutoff">
-                        <set field="isFreshOrderStatusEvent" from="true"/>
-                    </if>
-                    <if condition="allowOrderCompleted">
-                         <set field="isFreshOrderStatusEvent" from="true"/>
-                    </if>
-                </if>
                 
                 <set field="isOrderStatusWebhookTopic" from="eventStatusId in ['ORDER_CREATED', 'ORDER_APPROVED', 'ORDER_COMPLETED', 'ORDER_CANCELLED']"/>
                 
-                <!-- Rank Check -->
-                <set field="eventStatusMatchesHeader" from="true"/>
-                <if condition="!allowOrderCompleted">
-                <script><![CDATA[
-                    def orderStatusRank = ['ORDER_CREATED':10, 'ORDER_APPROVED':20, 'ORDER_COMPLETED':30, 'ORDER_CANCELLED':40]
-                    Integer eventRank = orderStatusRank[eventStatusId]
-                    Integer headerRank = orderStatusRank[doc.orderHeaderStatusId]
-                    if (eventRank != null && headerRank != null && headerRank > eventRank) {
-                        eventStatusMatchesHeader = false
-                    }
-                ]]></script>
-                </if>
-
-                 <!-- Deferral Logic -->
+                <!-- Deferral Logic -->
                  <set field="shipmentCompletedCheck" from="true"/>
                  <set field="orderHasShipment" from="false"/>
                  <if condition="eventStatusId == 'ORDER_COMPLETED' &amp;&amp; orderId">
@@ -368,27 +338,8 @@
                         </iterate>
                     </if>
                  </if>
-
-                 <set field="shipmentWebhookSent" from="true"/>
-                 <if condition="eventStatusId == 'ORDER_COMPLETED' &amp;&amp; orderId &amp;&amp; !allowOrderCompleted">
-                    <set field="shipmentWebhookSent" from="false"/>
-                    <script><![CDATA[
-                        long shipmentSentCount = ec.entity.find('moqui.service.message.SystemMessage')
-                                .condition('systemMessageTypeId', 'WebhookNotification')
-                                .condition('docControl', orderId.toString().replace('[','').replace(']','').split(',')[0].trim())
-                                .condition('statusId', 'in', ['SmsgSent', 'SmsgProduced', 'SmsgCreated', 'SmsgPrepared', 'SmsgSending'])
-                                .condition('messageText', 'like', '%"event_type"%SHIPMENT_SHIPPED"%')
-                                .count()
-                        shipmentWebhookSent = shipmentSentCount > 0
-                    ]]></script>
-                    <if condition="!shipmentWebhookSent">
-                        <log level="info" message=">>> [WebhookDataFeed][defer] OrderCompleted deferred until SHIPMENT_SHIPPED webhook is sent orderId=${orderId}"/>
-                    </if>
-                </if>
                 
-                <set field="finalLatestCheck" from="isLatestOrderStatusEvent || allowOrderCompleted"/>
-                
-                <if condition="orderId &amp;&amp; isOrderStatusWebhookTopic &amp;&amp; !eventOrderItemSeqId &amp;&amp; eventStatusMatchesHeader &amp;&amp; finalLatestCheck &amp;&amp; (finalLatestCheck || isFreshOrderStatusEvent) &amp;&amp; shipmentCompletedCheck &amp;&amp; shipmentWebhookSent">
+                <if condition="orderId &amp;&amp; isOrderStatusWebhookTopic &amp;&amp; !eventOrderItemSeqId &amp;&amp; shipmentCompletedCheck">
                     <set field="shouldDispatch" from="true"/>
                     <set field="topicEnumId" from="eventStatusId"/>
                     <set field="payload" from="[
@@ -397,8 +348,8 @@
                         shopify_order_name: doc.orderName ?: orderId,
                         previous_status: previousStatus,
                         status: eventStatusId,
-                        user_id: (doc.eventStatusUserLogin ?: doc.statusUserLogin) ?: ec.user.userId,
-                        bill_to: null, 
+                        user_id: (doc.eventStatusUserLogin ?: doc.statusUserLogin ?: doc.createdBy) ?: ec.user.userId ?: 'system',
+                        bill_to: null,
                         event_date: ((doc.eventStatusDatetime ?: eventStatusDatetime) ?: doc.orderEntryDate ?: ec.user.nowTimestamp)?.toInstant()?.toString()
                     ]"/>
                     <!-- Order specific item iterator -->
@@ -445,30 +396,6 @@
                             <set field="eventStatusLastUpdatedStamp" from="eventShipmentStatusEntity.lastUpdatedStamp"/>
                         </if>
                         
-                        <set field="shipmentEventReferenceTs" from="feedStamp ?: eventStatusLastUpdatedStamp ?: ec.user.nowTimestamp"/>
-                        <entity-find entity-name="org.apache.ofbiz.shipment.shipment.ShipmentStatus" list="latestShipmentStatusList" limit="1">
-                            <econdition field-name="shipmentId" from="shipmentId"/>
-                            <order-by field-name="-lastUpdatedStamp"/>
-                            <order-by field-name="-statusDate"/>
-                            <order-by field-name="-shipmentStatusId"/>
-                        </entity-find>
-                        
-                         <set field="latestShipmentStatus" from="latestShipmentStatusList ? latestShipmentStatusList[0] : null"/>
-                         <set field="isLatest" from="latestShipmentStatus &amp;&amp; eventShipmentStatusId == latestShipmentStatus.shipmentStatusId"/>
-                         
-                         <set field="freshTs" from="eventStatusLastUpdatedStamp ?: feedStamp ?: eventDate"/>
-                         <set field="freshCutoff" from="new java.sql.Timestamp(ec.user.nowTimestamp.time - (30L * 60L * 1000L))"/>
-                         <set field="isFresh" from="freshTs &amp;&amp; freshTs &gt;= freshCutoff"/>
-                         
-                         <set field="eventStatusMatchesShipment" from="true"/>
-                         <script>
-                            def shipmentStatusRank = ['SHIPMENT_INPUT':10, 'SHIPMENT_APPROVED':20, 'SHIPMENT_PICKED':25, 'SHIPMENT_PACKED':30, 'SHIPMENT_SHIPPED':40, 'SHIPMENT_DELIVERED':50]
-                            Integer eventRank = shipmentStatusRank[doc.eventStatusId]
-                            Integer currentRank = shipmentStatusRank[doc.shipmentCurrentStatusId]
-                            if (eventRank != null &amp;&amp; currentRank != null &amp;&amp; currentRank > eventRank) eventStatusMatchesShipment = false
-                        </script>
-                        
-                        <if condition="isLatest &amp;&amp; isFresh &amp;&amp; eventStatusMatchesShipment">
                             <set field="shouldDispatch" from="true"/>
                             <set field="topicEnumId" from="doc.eventStatusId"/>
                             
@@ -510,7 +437,7 @@
                                 facility_name: doc.facilityName,
                                 previous_status: previousStatus,
                                 status: doc.eventStatusId,
-                                user_id: doc.eventUserLoginId ?: ec.user.userId,
+                                user_id: doc.eventUserLoginId ?: ec.user.userId ?: 'system',
                                 shipping_method: shippingMethod,
                                 event_date: (doc.eventDate ?: ec.user.nowTimestamp)?.toInstant()?.toString()
                             ]"/>
@@ -530,7 +457,6 @@
                             <set field="payload.items" from="itemsList"/>
                             
                             <set field="triggerOrderCompleted" from="doc.eventStatusId == 'SHIPMENT_SHIPPED' &amp;&amp; orderId"/>
-                        </if>
                     </if>
                  </if>
             </if>
@@ -661,7 +587,6 @@
                     <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="billingContactMechList" limit="1">
                         <econdition field-name="orderId" from="orderId"/>
                         <econdition field-name="contactMechPurposeTypeId" value="BILLING_LOCATION"/>
-                        <econdition field-name="thruDate" operator="is-null"/>
                         <order-by field-name="-fromDate"/>
                     </entity-find>
                     <set field="billingContactMech" from="billingContactMechList ? billingContactMechList[0] : null"/>
@@ -700,31 +625,6 @@
                     <if condition="defaultLocaleString">
                         <set field="countryCode" from="defaultLocaleString.substring(defaultLocaleString.length()-2)"/>
                     </if>
-                </if>
-                <!-- Runtime lookup for precise country geo if DataDoc join or fallback failed or resulted in default US -->
-                <if condition="(!countryCode || countryCode == 'US') &amp;&amp; orderId">
-                    <script><![CDATA[
-                        def shipGroupSeq = doc.itemShipGroupSeqId ?: (doc.shipGroups ? doc.shipGroups[0]?.shipGroupSeqId : null)
-                        if (!shipGroupSeq && shipmentId) {
-                            def ship = ec.entity.find('org.apache.ofbiz.shipment.shipment.Shipment').condition('shipmentId', shipmentId).one()
-                            if (ship) shipGroupSeq = ship.primaryShipGroupSeqId ?: (ec.entity.find('org.apache.ofbiz.order.order.OrderShipment').condition('shipmentId', shipmentId).one()?.shipGroupSeqId)
-                        }
-                        if (shipGroupSeq) {
-                            def oisg = ec.entity.find('org.apache.ofbiz.order.order.OrderItemShipGroup').condition('orderId', orderId).condition('shipGroupSeqId', shipGroupSeq).one()
-                            if (oisg?.contactMechId) {
-                                def pa = ec.entity.find('org.apache.ofbiz.party.contact.PostalAddress').condition('contactMechId', oisg.contactMechId).one()
-                                if (pa?.countryGeoId) {
-                                    def geoMap = ec.entity.find('moqui.basic.Geo').condition('geoId', pa.countryGeoId).useCache(true).one()
-                                    if (geoMap?.geoCodeAlpha2) countryCode = geoMap.geoCodeAlpha2
-                                    else if (geoMap?.geoCodeAlpha3) countryCode = geoMap.geoCodeAlpha3
-                                    else countryCode = pa.countryGeoId
-                                    if (countryCode == pa.countryGeoId && geoMap?.geoCode) {
-                                        countryCode = geoMap.geoCode
-                                    }
-                                }
-                            }
-                        }
-                    ]]></script>
                 </if>
                 
                 <!-- Shared Fields Merge -->
@@ -782,23 +682,6 @@
                             if (pmtType) payload.put('payment_type', pmtType.description)
                         }
                     }
-                    
-                    // Fallback: Resolve missing user_id for ORDER events (like ORDER_CREATED)
-                    if (!payload.user_id && orderId && docType == 'WebhookOrderStatus') {
-                        def lastUserLoginId = ec.entity.find('org.apache.ofbiz.order.order.OrderStatus')
-                            .condition('orderId', orderId)
-                            .condition('orderItemSeqId', 'is-null', null)
-                            .condition('statusUserLogin', 'is-not-null', null)
-                            .orderBy('-statusDatetime').orderBy('-lastUpdatedStamp').limit(1).one()?.statusUserLogin
-                        
-                        // Default to the user who created the order if no statusUserLogin is found
-                        if (!lastUserLoginId) {
-                            lastUserLoginId = ec.entity.find('org.apache.ofbiz.order.order.OrderHeader').condition('orderId', orderId).one()?.createdBy
-                        }
-                        
-                        if (lastUserLoginId) payload.put('user_id', lastUserLoginId)
-                        else payload.put('user_id', 'system')
-                    }
 
                     // Add user_id and rejection_reason for ITEM_REJECTED / ITEM_BROKERED
                     if (topicEnumId in ['ITEM_REJECTED', 'ITEM_BROKERED']) {
@@ -820,100 +703,11 @@
                 ]]></script>
 
                 <service-call name="co.hotwax.webhook.WebhookServices.dispatch#WebhookEvent"
+                              require-new-transaction="true"
                               in-map="[topicEnumId: topicEnumId, orderId: orderId, shipmentId: shipmentId, orderItemSeqId: doc.orderItemSeqId,
                                       eventContext: [payload: payload, previousStatus: previousStatus]]" ignore-error="true"/>
 
-                <!-- Trigger deferred Order Completed check if all shipments shipped -->
-                <if condition="triggerOrderCompleted">
-                    <script><![CDATA[
-                        def allShipped = true
-                        def osList = ec.entity.find("org.apache.ofbiz.order.order.OrderShipment").condition("orderId", orderId).list()
-                        for (def os : (osList ?: [])) {
-                            def lst = ec.entity.find("org.apache.ofbiz.shipment.shipment.ShipmentStatus")
-                                    .condition("shipmentId", os.shipmentId)
-                                    .orderBy("-lastUpdatedStamp").orderBy("-statusDate").orderBy("-shipmentStatusId")
-                                    .limit(1).list()
-                            if (lst && lst[0].statusId != 'SHIPMENT_SHIPPED') { allShipped = false; break }
-                        }
-                        if (allShipped) {
-                            def completedList = ec.entity.find("org.apache.ofbiz.order.order.OrderStatus")
-                                    .condition("orderId", orderId)
-                                    .condition("orderItemSeqId", null)
-                                    .condition("statusId", "ORDER_COMPLETED")
-                                    .orderBy("-statusDatetime").orderBy("-lastUpdatedStamp").orderBy("-orderStatusId")
-                                    .limit(1).list()
-                            if (completedList) {
-                                 def cond = ec.entity.conditionFactory.makeCondition("orderStatusId", org.moqui.entity.EntityCondition.ComparisonOperator.IN, [completedList[0].orderStatusId])
-                                 def docs = ec.entityFacade.getDataDocuments("WebhookOrderStatus", cond, null, null)
-                                 if (docs) {
-                                    docs.each { d ->
-                                        d.put('_type', 'WebhookOrderStatus')
-                                        ec.service.sync().name("co.hotwax.webhook.WebhookServices.process#WebhookDataDocument")
-                                                .parameters([doc: d, feedStamp: ec.user.nowTimestamp, allowOrderCompleted: true]).call()
-                                    }
-                                 }
-                            }
-                        }
-                    ]]></script>
-                </if>
             </if>
         </actions>
-    </service>
-    
-    <service verb="poll" noun="WebhookOrderStatus">
-        <description>
-            Poll OrderStatus rows and dispatch webhook events (manual invocation, non-job version).
-        </description>
-
-        <in-parameters>
-            <parameter name="fromDate" type="Timestamp"/>
-            <parameter name="thruDate" type="Timestamp"/>
-            <parameter name="statusIds" type="List"/>
-            <parameter name="orderId"/>
-        </in-parameters>
-
-        <out-parameters>
-            <parameter name="documentCount" type="Long"/>
-        </out-parameters>
-
-        <actions>
-            <script>
-                // Disable authorization for this service execution
-                import org.moqui.entity.EntityCondition
-                ec.artifactExecutionFacade.disableAuthz()
-                ec.userFacade.loginAnonymousIfNoUser()
-            </script>
-            <set field="thruDate" from="thruDate ?: ec.user.nowTimestamp"/>
-            <set field="statusIds" from="statusIds ?: ['ORDER_CREATED', 'ORDER_APPROVED', 'ORDER_COMPLETED']"/>
-
-            <entity-find entity-name="org.apache.ofbiz.order.order.OrderStatus" list="orderStatusList">
-                <econdition field-name="orderItemSeqId" operator="is-null"/>
-                <econdition field-name="statusId" operator="in" from="statusIds"/>
-                <econdition field-name="lastUpdatedStamp" operator="greater-equals" from="fromDate" ignore-if-empty="true"/>
-                <econdition field-name="lastUpdatedStamp" operator="less" from="thruDate"/>
-                <econdition field-name="orderId" from="orderId" ignore-if-empty="true"/>
-                <order-by field-name="lastUpdatedStamp"/>
-                <order-by field-name="statusDatetime"/>
-            </entity-find>
-
-            <set field="orderStatusIds" from="orderStatusList*.orderStatusId"/>
-
-            <if condition="orderStatusIds">
-                <script>
-                    def condition = ec.entity.conditionFactory.makeCondition("eventOrderStatusId", EntityCondition.ComparisonOperator.IN, orderStatusIds)
-                    context.documentList = ec.entityFacade.getDataDocuments("WebhookOrderStatus", condition, null, null)
-                </script>
-            </if>
-
-            <set field="documentCount" from="documentList ? documentList.size() : 0"/>
-
-            <if condition="documentList">
-                <service-call name="co.hotwax.webhook.WebhookServices.receive#WebhookEvents" in-map="[documentList: documentList]" ignore-error="true"/>
-            </if>
-            <script>
-                // Re-enable authorization
-                ec.artifactExecutionFacade.enableAuthz()
-            </script>
-        </actions>
-    </service>
+    </service>    
 </services>
