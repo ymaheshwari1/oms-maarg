@@ -69,6 +69,12 @@ public class DecisionRuleHelper {
         StringBuilder condition = new StringBuilder();
         Object value = ev.get("fieldValue");
         Object field = ev.get("fieldName");
+        String joinOpString = ev.getString("joinOperator");
+        DroolsOperator joinOperator = null;
+
+        if (joinOpString != null) {
+            joinOperator = getDroolsOperator(joinOpString);
+        }
 
         DroolsOperator operator = getDroolsOperator(ev.getString("operator"));
         List<DroolsOperator> simpleOperators = new ArrayList<DroolsOperator>(Arrays.asList(DroolsOperator.EQUALS,
@@ -82,7 +88,7 @@ public class DecisionRuleHelper {
                 condition.append(value);
             }
         } else if (operator == DroolsOperator.CONTAINS || operator == DroolsOperator.NOT_CONTAINS) {
-            DroolsOperator joinOperator = (operator == DroolsOperator.CONTAINS) ? DroolsOperator.OR : DroolsOperator.AND;
+            joinOperator = (joinOperator != null) ? joinOperator : (operator == DroolsOperator.CONTAINS) ? DroolsOperator.OR : DroolsOperator.AND;
             List<String> fieldValuesIn = (List<String>) valueToCollection(value);
             condition.append("(");
             boolean isFirstValue = true;
