@@ -382,8 +382,12 @@
                 ]
             ]" out-map="orderHeader"/>
                 <else>
+                    <entity-find entity-name="org.apache.ofbiz.order.order.OrderItemShipGroup" list="itemShipGroups" limit="1">
+                        <econdition field-name="orderId" from="orderHeaders[0].orderId"/>
+                    </entity-find>
                     <service-call name="create#org.apache.ofbiz.order.order.OrderItem" in-map="[
                     orderId: orderHeaders[0].orderId,
+                    shipGroupSeqId: itemShipGroups[0].shipGroupSeqId,
                     productId: productId,
                     orderItemTypeId: 'PRODUCT_ORDER_ITEM',
                     statusId: 'ITEM_CREATED',
