@@ -253,7 +253,7 @@
             </script>
             <set field="errorList" type="List" from="[]"/>
             <entity-find entity-name="org.apache.ofbiz.product.facility.Facility" list="originFacilities" cache="true">
-                <econdition field-name="facilityId" from="originFacilityId"/>
+                <econdition field-name="externalId" from="originFacilityId"/>
             </entity-find>
 
             <if condition="!originFacilities">
@@ -261,7 +261,7 @@
             </if>
 
             <entity-find entity-name="org.apache.ofbiz.product.facility.Facility" list="destinationFacilities" cache="true">
-                <econdition field-name="facilityId" from="destinationFacilityId"/>
+                <econdition field-name="externalId" from="destinationFacilityId"/>
             </entity-find>
             <if condition="!destinationFacilities">
                 <script>errorList.add("Destination Facility [externalFacilityId: ${destinationFacilityId}] not found")</script>
