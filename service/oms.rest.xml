@@ -608,6 +608,13 @@ under the License.
                     <service name="co.hotwax.orderledger.order.TransferOrderServices.approve#WhFulfillTransferOrder"/>
                 </method>
             </resource>
+            <resource name="items">
+                <id name="orderItemSeqId">
+                    <resource name="status">
+                        <method type="put"><service name="co.hotwax.oms.order.OrderServices.change#OrderItemStatus"/></method>
+                    </resource>
+                </id>
+            </resource>
         </id>
         <resource name="grouped" description="Get Transfer Orders based on grouping, filters and sorting.">
             <method type="get">
