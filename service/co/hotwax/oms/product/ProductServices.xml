@@ -166,14 +166,11 @@ under the License.
             <script>
                 <![CDATA[
                     import java.time.temporal.ChronoUnit
-                    import com.fasterxml.jackson.databind.ObjectMapper
                     import com.fasterxml.jackson.core.JsonFactory
                     import com.fasterxml.jackson.core.JsonGenerator
-                    import java.io.PrintWriter
-                    import java.nio.charset.StandardCharsets
                     import org.apache.commons.fileupload.FileItem
                     import org.apache.commons.fileupload.disk.DiskFileItem
-                    import org.apache.commons.io.FileUtils
+                    import org.moqui.impl.context.ContextJavaUtil
                 ]]>
             </script>
             <if condition="!endDate">
@@ -196,15 +193,18 @@ under the License.
                 <use-iterator/>
             </entity-find>
 
-            <set field="jsonFilePathRef" value="runtime://tmp/ProductVelocity-${ec.l10n.format(ec.user.nowTimestamp, 'yyyy-MM-dd_HHmmss_SSS')}.json"/>
-            <set field="jsonFilePath" from="ec.resource.getLocationReference(jsonFilePathRef).getUri().getPath()"/>
-            <script><![CDATA[
+            <set field="fileName" value="ProductSalesVelocity-${ec.l10n.format(ec.user.nowTimestamp, 'yyyy-MM-dd_HHmmss_SSS')}.json"/>
+            <script>
+                <![CDATA[
                 count = 0
-                File productVelocityFile = new File(jsonFilePath)
-                if (!productVelocityFile.parentFile.exists()) productVelocityFile.parentFile.mkdirs()
-                JsonFactory jfactory = new JsonFactory()
-                try (PrintWriter pw = new PrintWriter(StandardCharsets.UTF_8, productVelocityFile)
-                    JsonGenerator jGenerator = jfactory.createGenerator(pw)) {
+                File parentDir = new File(ec.resource.getLocationReference("runtime://tmp/").uri.path)
+                if (!parentDir.exists()) parentDir.mkdirs()
+
+                // The DiskFileItem will handle writing to a temporary file in parentDir if the content exceeds the size threshold.
+                int sizeThreshold = 1000000 // 1 MB
+                fileItem = new org.apache.commons.fileupload.disk.DiskFileItem("contentFile", "application/json", false, fileName, sizeThreshold, parentDir)
+                try (java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(fileItem.getOutputStream(), 'UTF-8');
+                     JsonGenerator jGenerator = new JsonFactory().createGenerator(writer)) {
                     jGenerator.writeStartArray()
             ]]></script>
             <iterate entry="productSalesVelocity" list="productSalesVelocityList">
@@ -215,29 +215,24 @@ under the License.
                 </if>
                 <set field="prodMap" from="[productId:productSalesVelocity.productId,facilityId:productSalesVelocity.facilityId, salesVelocity:salesVelocity]"/>
                 <script>
-                    new ObjectMapper().setDateFormat(new java.text.SimpleDateFormat(System.getProperty('default_date_time_format')))
-                    .writerWithDefaultPrettyPrinter().writeValue(jGenerator, prodMap)
+                    ContextJavaUtil.jacksonMapper.writeValue(jGenerator, prodMap)
                     count++
                 </script>
             </iterate>
             <script><![CDATA[
-                   jGenerator.writeEndArray()
-               }
+                    jGenerator.writeEndArray()
+                } catch (Exception e) {
+                    ec.logger.error("Error in writing file content for product sales velocity, Error: ${e.message}")
+                }
             ]]></script>
-            <if condition="count == 0">
-                 <script>productVelocityFile.delete()</script>
-                 <return/>
+            <if condition="count &gt; 0">
+                <!-- Call DataManagerFile upload service -->
+                <service-call name="co.hotwax.util.UtilityServices.upload#DataManagerFile" in-map="[contentFile : fileItem, configId : configId]" out-map="context" />
             </if>
-            <!-- Create ResourceReference for generated JSON -->
-            <set field="jsonRr" from="ec.resource.getLocationReference(jsonFilePathRef)"/>
-            <script><![CDATA[
-                contentFile = new DiskFileItem("contentFile", jsonRr.getContentType(), false, productVelocityFile.getName(), (int) productVelocityFile.length(), productVelocityFile.getParentFile())
-                FileUtils.copyFile(productVelocityFile, contentFile.getOutputStream())
-            ]]></script>
-            <!-- Call DataManagerFile upload service -->
-            <service-call name="co.hotwax.util.UtilityServices.upload#DataManagerFile" in-map="[contentFile : contentFile, configId : configId]" out-map="context" />
             <script>
-                productVelocityFile.delete()
+                if (fileItem != null) {
+                    fileItem.delete()
+                }
             </script>
         </actions>
     </service>
