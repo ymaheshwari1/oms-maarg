@@ -285,6 +285,14 @@ under the License.
                 <method type="post">
                     <entity name="org.apache.ofbiz.product.facility.FacilityGroupMember" operation="store"/>
                 </method>
+                <id name="facilityGroupId">
+                    <method type="put">
+                        <entity name="org.apache.ofbiz.product.facility.FacilityGroupMember" operation="update"/>
+                    </method>
+                    <method type="delete">
+                        <entity name="org.apache.ofbiz.product.facility.FacilityGroupMember" operation="delete"/>
+                    </method>
+                </id>
             </resource>
             <resource name="productStores">
                 <method type="get">
@@ -293,6 +301,11 @@ under the License.
                 <method type="post">
                     <entity name="org.apache.ofbiz.product.store.ProductStoreFacility" operation="store"/>
                 </method>
+                <id name="productStoreId">
+                    <method type="put">
+                        <entity name="org.apache.ofbiz.product.store.ProductStoreFacility" operation="update"/>
+                    </method>
+                </id>
             </resource>
             <resource name="parties">
                 <method type="get">
