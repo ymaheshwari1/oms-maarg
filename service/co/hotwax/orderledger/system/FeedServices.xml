@@ -162,7 +162,7 @@ under the License.
                         }
                     } else {
                         for (targetValue in targetConfigValuesList) {
-                            return compareValues(actualValue, targetValue))
+                            return compareValues(actualValue, targetValue)
                         }
                     }
                     return false
