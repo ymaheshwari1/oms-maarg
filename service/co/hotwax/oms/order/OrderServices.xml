@@ -1656,7 +1656,7 @@ under the License.
             <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderHeader" value-field="orderHeader">
                 <field-map field-name="orderId" from="orderId"/>
             </entity-find-one>
-            <if condition="!orderHeader || orderHeader.salesChannelEnumId != 'POS_SALES_CHANNEL'">
+            <if condition="!orderHeader || orderHeader.salesChannelEnumId != 'POS_SALES_CHANNEL' || orderHeader.needsInventoryIssuance == 'N'">
                 <return message="Order: ${orderId} not eligible for issuance"/>
             </if>
 
@@ -1743,6 +1743,8 @@ under the License.
                             quantityOnHandDiff:quantityOnHandDiff.negate()]"/>
                 </iterate>
             </iterate>
+            <set field="orderHeader.needsInventoryIssuance" value="N"/>
+            <service-call name="update#org.apache.ofbiz.order.order.OrderHeader" in-map="orderHeader"/>
         </actions>
     </service>
 </services>
