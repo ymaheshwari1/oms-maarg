@@ -151,35 +151,18 @@ under the License.
                 }
 
                 def isProductAttributeMatchingConfig = { actualValue, configuredValueInput ->
-
-                    if (actualValue == null || configuredValueInput == null) {
-                        return false
-                    }
-
+                    if (actualValue == null || configuredValueInput == null) return false
                     def targetConfigValuesList = []
-
-                    if (configuredValueInput instanceof String && configuredValueInput.contains(",")) {
-                        targetConfigValuesList = configuredValueInput
-                                .split(",")
-                                .collect { it.trim() }
-                                .findAll { it }
-                    } else {
-                        targetConfigValuesList = [configuredValueInput]
-                    }
-
+                    targetConfigValuesList = configuredValueInput.split(",").collect { it.trim() }.findAll { it }
                     if (actualValue instanceof Collection) {
                         for (individualProductValue in actualValue) {
                             for (targetValue in targetConfigValuesList) {
-                                if (compareValues(individualProductValue, targetValue)) {
-                                    return true
-                                }
+                                return compareValues(individualProductValue, targetValue))
                             }
                         }
                     } else {
                         for (targetValue in targetConfigValuesList) {
-                            if (compareValues(actualValue, targetValue)) {
-                                return true
-                            }
+                            compareValues(actualValue, targetValue))
                         }
                     }
                     return false
