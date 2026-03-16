@@ -173,8 +173,6 @@ under the License.
                     int sequenceIndex = 1
                     while ((line = reader.readLine()) != null) {
                         Map jsonLine = ContextJavaUtil.jacksonMapper.readValue(line, Map.class)
-                        System.out.println("=============jsonLine======"+jsonLine)
-                        System.out.println("=============additionalParameters======"+additionalParameters)
                         String id = jsonLine.get("id") as String
 
                         boolean isVirtual = !jsonLine.containsKey("__parentId")
