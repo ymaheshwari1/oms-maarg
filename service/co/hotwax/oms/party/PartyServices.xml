@@ -179,10 +179,8 @@
                 <log level="info" message="store#Picker created new partyId=${partyId} for externalPartyId=${externalPartyId}"/>
                 <service-call name="create#org.apache.ofbiz.party.party.Person" in-map="[partyId:partyId, firstName:firstName, lastName:lastName]"/>
 
-              <log message="==emailAddress==========${partyId}========${emailAddress}===="/>
 
                 <if condition="emailAddress">
-                  <log message="==calling emailAddress==========${partyId}========${emailAddress}===="/>
                     <service-call name="create#org.apache.ofbiz.party.contact.ContactMech" out-map="emailOut"
                                   in-map="[contactMechTypeId:'EMAIL_ADDRESS', infoString:emailAddress]"/>
                     <service-call name="create#org.apache.ofbiz.party.contact.PartyContactMech"
