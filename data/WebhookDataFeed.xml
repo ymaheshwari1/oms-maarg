@@ -38,6 +38,10 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
@@ -73,6 +77,11 @@
         <fields fieldSeqId="14" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:org.apache.ofbiz.shipment.shipment.ShipmentMethodType:description" fieldNameAlias="shipmentMethodDesc"/>
         <fields fieldSeqId="15" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingIdNumber" fieldNameAlias="trackingCode"/>
         <fields fieldSeqId="16" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingUrl" fieldNameAlias="trackingUrl"/>
+        <fields fieldSeqId="17" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:address1" fieldNameAlias="originAddress1"/>
+        <fields fieldSeqId="18" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:city" fieldNameAlias="originCity"/>
+        <fields fieldSeqId="19" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="originState"/>
+        <fields fieldSeqId="1a" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:postalCode" fieldNameAlias="originZipCode"/>
+        <fields fieldSeqId="1b" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:contactMechPurposeTypeId" fieldNameAlias="originContactMechPurposeTypeId"/>
 
         <fields fieldSeqId="20" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderId"/>
         <fields fieldSeqId="21" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderName" fieldNameAlias="orderName"/>
@@ -93,6 +102,10 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
@@ -145,6 +158,10 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>

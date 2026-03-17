@@ -597,6 +597,29 @@
                         <set field="billToNameFallback" from="billingPostalAddress?.toName"/>
                     </if>
                 </if>
+
+                <set field="shipContact" from="null"/>
+                <if condition="billContactList">
+                    <iterate list="billContactList" entry="bc">
+                        <if condition="bc.contactMechPurposeTypeId == 'SHIPPING_LOCATION'">
+                            <set field="shipContact" from="bc"/>
+                        </if>
+                    </iterate>
+                </if>
+                <if condition="!shipContact &amp;&amp; orderId">
+                    <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="shippingContactMechList" limit="1">
+                        <econdition field-name="orderId" from="orderId"/>
+                        <econdition field-name="contactMechPurposeTypeId" value="SHIPPING_LOCATION"/>
+                        <order-by field-name="-fromDate"/>
+                    </entity-find>
+                    <set field="shippingContactMech" from="shippingContactMechList ? shippingContactMechList[0] : null"/>
+                    <if condition="shippingContactMech?.contactMechId">
+                        <entity-find-one entity-name="org.apache.ofbiz.party.contact.PostalAddress" value-field="shippingPostalAddress">
+                            <field-map field-name="contactMechId" from="shippingContactMech.contactMechId"/>
+                        </entity-find-one>
+                        <set field="shipContact" from="shippingPostalAddress"/>
+                    </if>
+                </if>
                 
                 <set field="adjustmentList" from="doc.adjustments"/>
                 <if condition="!adjustmentList &amp;&amp; orderShipment">
@@ -642,6 +665,25 @@
                         total_price: grandTotal,
                         order_price: orderPrice
                     ])
+
+                    // Add Customer Shipping Address
+                    def shipAddr = shipContact ?: shipGroup
+                    if (shipAddr) {
+                        payload.put('shipping_address', [
+                            address: shipAddr.address1,
+                            city: shipAddr.city,
+                            state: shipAddr.state,
+                            zip_code: shipAddr.zipCode
+                        ])
+                    }
+
+                    // Add Store Ship From Address
+                    if (docType == 'WebhookShipmentStatus' || shipmentId) {
+                        payload.put('ship_from_address', [
+                            store_name: payload.brand,
+                            address: doc.originAddress1
+                        ])
+                    }
                     if (!payload.shipping_method) payload.put('shipping_method', shipGroup?.shipmentMethodDesc ?: shipGroup?.shipmentMethodTypeId)
 
                     // For ITEM_BROKERED: resolve facility from OrderItem.shipGroupSeqId
