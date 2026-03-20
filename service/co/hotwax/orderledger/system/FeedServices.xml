@@ -248,6 +248,7 @@ under the License.
                                     updateParams = [
                                         productId: virtualProductId,
                                         shopId: shopId,
+                                        systemMessageId: systemMessageId,
                                         differenceMap: existingDiffMap
                                     ]
                                     if (forCreate) {
@@ -354,6 +355,7 @@ under the License.
                             updateParams = [
                                 productId: virtualProductId,
                                 shopId: shopId,
+                                systemMessageId: systemMessageId,
                                 differenceMap: existingDiffMap
                             ]
 
@@ -694,6 +696,7 @@ under the License.
                             </if>
                         </if>
                     </iterate>
+                    <set field="hasUpdate" from="false"/>
                 </if>
                 <if condition="diff.assocs?.removed">
                     <iterate list="diff.assocs?.removed" entry="variantProduct">
