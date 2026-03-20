@@ -149,6 +149,24 @@ under the License.
                     }
                     return false
                 }
+
+                def isProductAttributeMatchingConfig = { actualValue, configuredValueInput ->
+                    if (actualValue == null || configuredValueInput == null) return false
+                    def targetConfigValuesList = []
+                    targetConfigValuesList = configuredValueInput.split(",").collect { it.trim() }.findAll { it }
+                    if (actualValue instanceof Collection) {
+                        for (individualProductValue in actualValue) {
+                            for (targetValue in targetConfigValuesList) {
+                                return compareValues(individualProductValue, targetValue)
+                            }
+                        }
+                    } else {
+                        for (targetValue in targetConfigValuesList) {
+                            return compareValues(actualValue, targetValue)
+                        }
+                    }
+                    return false
+                }
                 try(InputStream inputStream = ec.resource.getLocationStream(inputPath);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                     String line
@@ -164,7 +182,7 @@ under the License.
                         if (isVirtual) {
                             boolean skipProductImport = false
                             additionalParameters.each { paramName, paramValue ->
-                                if (jsonLine.containsKey(paramName) && compareValues(jsonLine[paramName], paramValue)) {
+                                if (jsonLine.containsKey(paramName) && isProductAttributeMatchingConfig(jsonLine[paramName], paramValue)) {
                                     skipProductImport = true
                                     return
                                 }
@@ -278,7 +296,7 @@ under the License.
                     if (virtualProduct) {
                         boolean skipProductImport = false
                         additionalParameters.each { paramName, paramValue ->
-                            if (virtualProduct.containsKey(paramName) && compareValues(virtualProduct[paramName], paramValue)) {
+                            if (virtualProduct.containsKey(paramName) && isProductAttributeMatchingConfig(virtualProduct[paramName], paramValue)) {
                                skipProductImport = true
                                variants.clear()
                                metafields.clear()
