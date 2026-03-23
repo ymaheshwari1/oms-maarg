@@ -509,6 +509,32 @@ under the License.
                     <set field="requireComponents" from="diff.hasVariantsThatRequireComponents" type="Boolean"/>
                 </if>
 
+                <entity-find-one entity-name="org.apache.ofbiz.product.store.ProductStoreSetting" value-field="productCategoryAttribute" cache="true">
+                    <field-map field-name="productStoreId" from="shopifyShop.productStoreId"/>
+                    <field-map field-name="settingTypeEnumId" value="PROD_CAT_ATTR"/>
+                </entity-find-one>
+
+                <if condition="productCategoryAttribute.settingValue == 'Y' &amp;&amp; diff.category">
+                    <!-- Upsert logic: check if already exists -->
+                    <entity-find-one entity-name="org.apache.ofbiz.product.product.ProductAttribute" value-field="existingAttr">
+                        <field-map field-name="productId" from="productId"/>
+                        <field-map field-name="attrName" value="Category"/>
+                    </entity-find-one>
+
+                    <if condition="existingAttr">
+                        <!-- Update value if different -->
+                        <if condition="existingAttr.attrValue != diff.category || existingAttr.attrType != 'Category'">
+                            <service-call name="update#org.apache.ofbiz.product.product.ProductAttribute"
+                                          in-map="[productId:productId, attrName:'Category', attrValue:diff.category]"/>
+                        </if>
+                        <else>
+                            <!-- Create new ProductAttribute -->
+                            <service-call name="create#org.apache.ofbiz.product.product.ProductAttribute"
+                                          in-map="[productId:productId, attrName:'Category', attrValue:diff.category]"/>
+                        </else>
+                    </if>
+                </if>
+
                 <!-- Skip updating product type if product is updated -->
                 <if condition="(!skipProductTypeUpdate || !hasUpdate) &amp;&amp; diff.title">
                     <set field="product.productTypeId" value="FINISHED_GOOD"/>
