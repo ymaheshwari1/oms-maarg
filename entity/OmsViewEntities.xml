@@ -604,4 +604,14 @@
             </having-econditions>
         </entity-condition>
     </view-entity>
+
+    <view-entity entity-name="OrderFacilityChangeAndOrderItem" package="co.hotwax.oms.order">
+        <member-entity entity-name="co.hotwax.facility.OrderFacilityChange" entity-alias="OFC"/>
+        <member-entity entity-name="org.apache.ofbiz.order.order.OrderItem" entity-alias="OI" join-from-alias="OFC">
+            <key-map field-name="orderId"/>
+            <key-map field-name="orderItemSeqId"/>
+        </member-entity>
+        <alias-all entity-alias="OFC"/>
+        <alias entity-alias="OI" name="productId"/>
+    </view-entity>
 </entities>
