@@ -118,7 +118,7 @@ under the License.
             </resource>
             <resource name="facilityChange">
                 <method type="get">
-                    <entity name="co.hotwax.facility.OrderFacilityChange" operation="list"/>
+                    <entity name="co.hotwax.oms.order.OrderFacilityChangeAndOrderItem" operation="list"/>
                 </method>
             </resource>
             <resource name="shipToStore">
