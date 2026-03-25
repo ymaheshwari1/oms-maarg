@@ -310,14 +310,14 @@ under the License.
                     </parameter>
                 </parameter>
             </parameter>
-            <parameter name="attributes" type="List">
+            <parameter name="attributes" type="List" allow-html="any">
                 <parameter name="attribute" type="Map">
                     <parameter name="attrName"/>
                     <parameter name="attrValue"/>
                     <parameter name="attrDescription"/>
                 </parameter>
             </parameter>
-            <parameter name="contents" type="List">
+            <parameter name="contents" type="List" allow-html="any">
                 <parameter name="content" type="Map">
                     <parameter name="orderItemSeqId"/>
                     <parameter name="orderContentTypeId"/>
@@ -354,7 +354,7 @@ under the License.
                 </parameter>
             </parameter>
             <parameter name="tags" type="List"/>
-            <parameter name="note" type="List">
+            <parameter name="note" type="List" allow-html="any">
                 <parameter name="noteText"/>
             </parameter>
             <parameter name="paymentPreferences" type="List">
