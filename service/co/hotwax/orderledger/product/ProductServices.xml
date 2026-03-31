@@ -1242,7 +1242,7 @@ under the License.
                         (productJson.featuredMedia?.preview?.image?.url ?: '')
                     ]
 
-                    if (productCategoryAttribute.settingValue == 'Y') parts.add(productJson?.category?.name)
+                    if (productCategoryAttribute && productCategoryAttribute.settingValue == 'Y') parts.add(productJson?.category?.name)
 
                     def productCoreDetailsHash = hash(parts.join('||'))
 
@@ -1291,7 +1291,7 @@ under the License.
                         identifications: identifications
                     ]
 
-                    if (productCategoryAttribute.settingValue == 'Y') diffMap.category = productJson?.category?.name
+                    if (productCategoryAttribute && productCategoryAttribute.settingValue == 'Y') diffMap.category = productJson?.category?.name
 
                     // prepare JSON-serialized fields for storage (so DB has JSON text)
                     tagsJson = ContextJavaUtil.jacksonMapper.writeValueAsString(tags)
@@ -1341,7 +1341,7 @@ under the License.
                 (productJson.featuredMedia?.preview?.image?.url ?: '')
             ]
 
-            if (productCategoryAttribute.settingValue == 'Y') parts.add(productJson?.category?.name)
+            if (productCategoryAttribute && productCategoryAttribute.settingValue == 'Y') parts.add(productJson?.category?.name)
 
             def newCoreHash = hash(parts.join('||'))
             if (newCoreHash != productUpdateHistory.productCoreDetailsHash) {
@@ -1353,7 +1353,7 @@ under the License.
                 differenceMap.requiresShipping = productJson.requiresShipping
                 differenceMap.hasVariantsThatRequireComponents = productJson.hasVariantsThatRequiresComponents
                 differenceMap.featureImageUrl = productJson.featuredMedia?.preview?.image?.url
-                if (productCategoryAttribute.settingValue == 'Y') differenceMap.category = productJson?.category?.name
+                if (productCategoryAttribute && productCategoryAttribute.settingValue == 'Y') differenceMap.category = productJson?.category?.name
             }
 
             // --- Tags ---
