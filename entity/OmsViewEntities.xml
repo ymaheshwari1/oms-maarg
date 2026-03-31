@@ -590,6 +590,7 @@
         <alias name="psfThruDate" entity-alias="PSF" field="thruDate"/>
         <alias name="fromDate" entity-alias="FGM"/>
         <alias name="thruDate" entity-alias="FGM"/>
+        <alias name="facilityId" entity-alias="F"/>
         <alias name="allowBrokering" entity-alias="PF"/>
         <alias name="productStoreId" entity-alias="PSF"/>
         <alias name="facilityGroupTypeId" entity-alias="FG"/>
