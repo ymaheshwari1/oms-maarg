@@ -1663,7 +1663,7 @@ under the License.
             <entity-find entity-name="co.hotwax.order.OrderItemAndShipGroup" list="posOrderItems">
                 <econdition field-name="orderId" from="orderId"/>
                 <econdition field-name="shipmentMethodTypeId" value="POS_COMPLETED"/>
-                <econdition field-name="statusId" operator="not-equals" value="ITEM_CANCELLED"/>
+                <econdition field-name="statusId" value="ITEM_COMPLETED"/>
             </entity-find>
             <if condition="posOrderItems">
                 <entity-find-one entity-name="co.hotwax.facility.FacilityAndType" value-field="facilityAndType" cache="true">
