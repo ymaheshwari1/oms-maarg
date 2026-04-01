@@ -503,7 +503,7 @@ under the License.
                     <order-by field-name="-lastUpdatedStamp"/>
                 </entity-find>
 
-                <!-- If orderContactMechList then fetch the contact details using the contactMechIds -->
+                <!-- If orderContactMechList then fetch the billTo details using the contactMechIds -->
                 <if condition="orderContactMechList">
                     <set field="billingAddressContactMechId" from="orderContactMechList.find{ 'BILLING_LOCATION'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
                     <set field="billingEmailContactMech" from="orderContactMechList.find{ 'BILLING_EMAIL'.equals(it.contactMechPurposeTypeId) }"/>
