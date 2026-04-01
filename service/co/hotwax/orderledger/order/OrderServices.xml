@@ -492,17 +492,35 @@ under the License.
                 </iterate>
 
                 <set field="orderDetail.shipGroups" from="shipGroups"/>
+                <set field="isStorePickup" from="orderItemShipments.find{ it.slaShipmentMethodTypeId == 'STOREPICKUP' } != null" type="Boolean"/>
+                <set field="contactMechPurposes" from="['BILLING_LOCATION', 'BILLING_EMAIL', 'PHONE_BILLING']"/>
+                <if condition="isStorePickup">
+                    <set field="contactMechPurposes" from="contactMechPurposes + ['SHIPPING_LOCATION', 'ORDER_EMAIL', 'PHONE_ORDER', 'PHONE_SHIPPING']"/>
+                </if>
                 <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="orderContactMechList">
                     <econdition field-name="orderId"/>
-                    <econdition field-name="contactMechPurposeTypeId" operator="in" value="BILLING_LOCATION,BILLING_EMAIL,PHONE_BILLING"/>
+                    <econdition field-name="contactMechPurposeTypeId" operator="in" from="contactMechPurposes"/>
                     <order-by field-name="-lastUpdatedStamp"/>
                 </entity-find>
 
-                <!-- If orderContactMechList then fetch the billTo details using the contactMechIds -->
+                <!-- If orderContactMechList then fetch the contact details using the contactMechIds -->
                 <if condition="orderContactMechList">
                     <set field="billingAddressContactMechId" from="orderContactMechList.find{ 'BILLING_LOCATION'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
                     <set field="billingEmailContactMech" from="orderContactMechList.find{ 'BILLING_EMAIL'.equals(it.contactMechPurposeTypeId) }"/>
                     <set field="billingPhoneContactMechId" from="orderContactMechList.find{ 'PHONE_BILLING'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+
+                    <!-- Fallback for Store Pickups if billing details are missing -->
+                    <if condition="isStorePickup">
+                        <if condition="!billingAddressContactMechId">
+                            <set field="billingAddressContactMechId" from="orderContactMechList.find{ 'SHIPPING_LOCATION'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+                        </if>
+                        <if condition="!billingEmailContactMech">
+                            <set field="billingEmailContactMech" from="orderContactMechList.find{ 'ORDER_EMAIL'.equals(it.contactMechPurposeTypeId) }"/>
+                        </if>
+                        <if condition="!billingPhoneContactMechId">
+                            <set field="billingPhoneContactMechId" from="orderContactMechList.find{ 'PHONE_ORDER'.equals(it.contactMechPurposeTypeId) }?.contactMechId ?: orderContactMechList.find{ 'PHONE_SHIPPING'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+                        </if>
+                    </if>
 
                     <if condition="billingAddressContactMechId">
                         <!-- Get the BillTo Postal Address Details -->
