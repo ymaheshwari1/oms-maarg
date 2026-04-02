@@ -494,7 +494,7 @@ under the License.
                 <set field="orderDetail.shipGroups" from="shipGroups"/>
                 <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="orderContactMechList">
                     <econdition field-name="orderId"/>
-                    <econdition field-name="contactMechPurposeTypeId" operator="in" value="BILLING_LOCATION,BILLING_EMAIL,PHONE_BILLING,SHIPPING_LOCATION,ORDER_EMAIL,PHONE_ORDER,PHONE_SHIPPING"/>
+                    <econdition field-name="contactMechPurposeTypeId" operator="in" value="BILLING_LOCATION,BILLING_EMAIL,PHONE_BILLING,SHIPPING_LOCATION,ORDER_EMAIL,PHONE_SHIPPING,PHONE_ORDER"/>
                     <order-by field-name="-lastUpdatedStamp"/>
                 </entity-find>
 
@@ -503,6 +503,11 @@ under the License.
                     <set field="billingAddressContactMechId" from="orderContactMechList.find{ 'BILLING_LOCATION'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
                     <set field="billingEmailContactMech" from="orderContactMechList.find{ 'BILLING_EMAIL'.equals(it.contactMechPurposeTypeId) }"/>
                     <set field="billingPhoneContactMechId" from="orderContactMechList.find{ 'PHONE_BILLING'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+
+                    <set field="shippingAddressContactMechId" from="orderContactMechList.find{ 'SHIPPING_LOCATION'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+                    <set field="orderEmailContactMech" from="orderContactMechList.find{ 'ORDER_EMAIL'.equals(it.contactMechPurposeTypeId) }"/>
+                    <set field="shippingPhoneContactMechId" from="orderContactMechList.find{ 'PHONE_SHIPPING'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
+                    <set field="orderPhoneContactMechId" from="orderContactMechList.find{ 'PHONE_ORDER'.equals(it.contactMechPurposeTypeId) }?.contactMechId"/>
 
                     <if condition="billingAddressContactMechId">
                         <!-- Get the BillTo Postal Address Details -->
@@ -522,11 +527,41 @@ under the License.
                             <field-map field-name="contactMechId" from="billingPhoneContactMechId"/>
                         </entity-find-one>
                     </if>
+
+                    <if condition="shippingAddressContactMechId">
+                        <!-- Get the ShipTo Postal Address Details -->
+                        <entity-find-one entity-name="co.hotwax.oms.contact.PostalAddressAndGeo" value-field="shippingAddressMap">
+                            <field-map field-name="contactMechId" from="shippingAddressContactMechId"/>
+                        </entity-find-one>
+                    </if>
+
+                    <if condition="orderEmailContactMech">
+                        <!-- Get the BillTo Email Address Details -->
+                        <entity-find-related-one value-field="orderEmailContactMech" relationship-name="org.apache.ofbiz.party.contact.ContactMech" to-value-field="orderEmailContactMech"/>
+                    </if>
+
+                    <if condition="shippingPhoneContactMechId">
+                        <!-- Get the ShipTo Phone Number Details -->
+                        <entity-find-one entity-name="org.apache.ofbiz.party.contact.TelecomNumber" value-field="shippingPhoneDetails">
+                            <field-map field-name="contactMechId" from="shippingPhoneContactMechId"/>
+                        </entity-find-one>
+                    </if>
+
+                    <if condition="orderPhoneContactMechId">
+                        <!-- Get the ShipTo Phone Number Details -->
+                        <entity-find-one entity-name="org.apache.ofbiz.party.contact.TelecomNumber" value-field="orderPhoneDetails">
+                            <field-map field-name="contactMechId" from="orderPhoneContactMechId"/>
+                        </entity-find-one>
+                    </if>
                 </if>
 
                 <set field="orderDetail.billingAddress" from="billingAddressMap ? billingAddressMap.getMap() : [:] "/>
                 <set field="orderDetail.billingEmail" from="billToEmailContactMech?.infoString"/>
                 <set field="orderDetail.billingPhone" from="billingPhoneDetails"/>
+                <set field="orderDetail.shippingAddress" from="shippingAddressMap ? shippingAddressMap.getMap() : [:] "/>
+                <set field="orderDetail.orderEmail" from="orderEmailContactMech?.infoString"/>
+                <set field="orderDetail.shippingPhone" from="shippingPhoneDetails"/>
+                <set field="orderDetail.orderPhone" from="orderPhoneDetails"/>
 
                 <entity-find entity-name="org.apache.ofbiz.order.order.OrderAttribute" list="orderAttributes">
                     <econdition field-name="orderId"/>
