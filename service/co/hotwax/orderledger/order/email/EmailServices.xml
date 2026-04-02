@@ -429,15 +429,26 @@ under the License.
                         def capacity = storeHours[capacityField]
 
                         boolean isValidOrder = false
-                        LocalTime sundayOpenTime = storeHours['sundayStartTime'].get(0).toLocalTime()
-                        long sundayCapacitySeconds = (storeHours['sundayCapacity'].get(0) instanceof Double ? storeHours['sundayCapacity'].get(0).longValue() : Long.parseLong(storeHours['sundayCapacity'].get(0).toString())) / 1000
-                        LocalTime sundayCloseTime = sundayOpenTime.plusSeconds(sundayCapacitySeconds)
+                        LocalTime sundayOpenTime = null
+                        LocalTime sundayCloseTime = null
+                        LocalTime storeOpenTime = null
+                        LocalTime storeCloseTime = null
 
-                        LocalTime storeOpenTime = startTime.get(0).toLocalTime()
-                        long capacitySeconds = (capacity.get(0) instanceof Double ? capacity.get(0).longValue() : Long.parseLong(capacity.get(0).toString())) / 1000
-                        LocalTime storeCloseTime = storeOpenTime.plusSeconds(capacitySeconds)
+                        if (storeHours['sundayStartTime']?.get(0) != null &amp;&amp; storeHours['sundayCapacity']?.get(0) != null) {
+                            sundayOpenTime = storeHours['sundayStartTime'].get(0).toLocalTime()
+                            def sundayCap = storeHours['sundayCapacity'].get(0)
+                            long sundayCapacitySeconds = (sundayCap instanceof Double ? sundayCap.longValue() : Long.parseLong(sundayCap.toString())) / 1000
+                            sundayCloseTime = sundayOpenTime.plusSeconds(sundayCapacitySeconds)
+                        }
 
-                        if ((startTime &amp;&amp; capacity) &amp;&amp; (storeHours['sundayStartTime'] &amp;&amp; storeHours['sundayCapacity'])) {
+                        if (startTime?.get(0) != null &amp;&amp; capacity?.get(0) != null) {
+                            storeOpenTime = startTime.get(0).toLocalTime()
+                            def cap = capacity.get(0)
+                            long capacitySeconds = (cap instanceof Double ? cap.longValue() : Long.parseLong(cap.toString())) / 1000
+                            storeCloseTime = storeOpenTime.plusSeconds(capacitySeconds)
+                        }
+
+                        if (storeOpenTime != null &amp;&amp; storeCloseTime != null) {
                             isValidOrder = orderTime.isAfter(storeCloseTime) || orderTime.isBefore(storeOpenTime)
                         }
                     </script>
