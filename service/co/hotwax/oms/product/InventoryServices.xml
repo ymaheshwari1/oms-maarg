@@ -94,7 +94,6 @@ under the License.
         <in-parameters>
             <parameter name="productStoreId" required="true"/>
             <parameter name="facilityGroupId"/>
-            <parameter name="facilityId"/>
             <parameter name="productId" type="List"/>
             <parameter name="sku" type="List"/>
         </in-parameters>
@@ -135,7 +134,6 @@ under the License.
                 </econditions>
                 <econdition field-name="facilityGroupTypeId" value="CHANNEL_FAC_GROUP"/>
                 <econdition field-name="facilityGroupId" from="facilityGroupId" ignore-if-empty="true"/>
-                <econdition field-name="facilityId" from="facilityId" ignore-if-empty="true"/>
                 <econdition field-name="facilityParentTypeId" operator="not-equals" value="VIRTUAL_FACILITY"/>
                 <date-filter/>
                 <date-filter from-field-name="psfFromDate" thru-field-name="psfThruDate"/>

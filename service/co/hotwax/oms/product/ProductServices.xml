@@ -117,12 +117,11 @@ under the License.
                     <service-call name="create#org.apache.ofbiz.product.inventory.InventoryItem" in-map="inventoryItemMap" out-map="inventoryItemOut"/>
                     <set field="inventoryItemId" from="inventoryItemOut.inventoryItemId"/>
                     <if condition="!productFacility">
-                        <set field="productFacilityMap" from="[productId: productId, facilityId: facilityId, inventoryItemId: inventoryItemId, lastUpdatedStamp: ec.user.nowTimestamp]"/>
+                        <set field="productFacilityMap" from="[productId: productId, facilityId: facilityId, inventoryItemId: inventoryItemId]"/>
                         <service-call name="create#org.apache.ofbiz.product.facility.ProductFacility" in-map="productFacilityMap" out-map="productFacilityOut"/>
                         <set field="productFacility" from="productFacilityOut"/>
                         <else>
                             <set field="productFacility.inventoryItemId" from="inventoryItemId"/>
-                            <set field="productFacility.lastUpdatedStamp" from="ec.user.nowTimestamp"/>
                             <service-call name="update#org.apache.ofbiz.product.facility.ProductFacility" in-map="productFacility"/>
                         </else>
                     </if>
