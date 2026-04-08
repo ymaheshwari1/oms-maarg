@@ -600,6 +600,11 @@ under the License.
                     <service-call name="store#org.apache.ofbiz.party.party.Person" in-map="[partyId: customerPartyId, roles: partyRoles]"/>
                 </else>
             </if>
+
+            <!-- Check and update the Person -->
+            <entity-make-value entity-name="org.apache.ofbiz.party.party.Person" map="[partyId: customerPartyId, firstName: firstName, lastName: lastName]" value-field="person"/>
+            <service-call name="update#org.apache.ofbiz.party.party.Person" in-map="person"/>
+
             <if condition="!roles &amp;&amp; customerPartyId">
                 <set field="roles" from="[[partyId:customerPartyId, roleTypeId:'PLACING_CUSTOMER'],
                                           [partyId:customerPartyId, roleTypeId:'END_USER_CUSTOMER'],
