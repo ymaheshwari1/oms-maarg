@@ -74,7 +74,7 @@
                 </econditions>
                 <econdition field-name="orderFacilityId" from="destinationFacilityId" ignore-if-empty="true"/>
                 <econdition field-name="orderName" operator="like" value="${orderName}%" ignore="!orderName"/>
-                <select-field field-name="orderId,orderName,orderExternalId,orderStatusId,orderStatusDesc"/>
+                <select-field field-name="orderId,orderName,orderExternalId,orderStatusId,orderStatusDesc,facilityId,orderFacilityId,orderDate"/>
             </entity-find>
         </actions>
     </service>
