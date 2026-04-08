@@ -592,7 +592,7 @@ under the License.
         <method type="get"><entity name="moqui.service.message.SystemMessageRemote" operation="list"/></method>
         <method type="post"><entity name="moqui.service.message.SystemMessageRemote" operation="create"/></method>
         <id name="systemMessageRemoteId">
-            <method type="put"><entity name="moqui.service.message.SystemMessageRemote" operation="update"/></method>
+            <method type="put"><entity name="moqui.service.message.SystemMessageRemote" operation="store"/></method>
             <method type="delete"><entity name="moqui.service.message.SystemMessageRemote" operation="delete"/></method>
         </id>
     </resource>
