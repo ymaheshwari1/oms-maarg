@@ -57,6 +57,7 @@
             <parameter name="carrierPartyId">
                 <description>The ID of the carrier party of the Transfer Order.</description>
             </parameter>
+            <parameter name="fieldsToSelect" default-value="orderId"/>
         </in-parameters>
         <out-parameters>
             <parameter name="orders" type="List"/>
@@ -83,10 +84,7 @@
                 </econditions>
                 <econdition field-name="orderFacilityId" from="destinationFacilityId" ignore-if-empty="true"/>
                 <econdition field-name="orderName" operator="like" value="${orderName}%" ignore="!orderName"/>
-                <econdition field-name="productStoreId" ignore-if-empty="true"/>
-                <econdition field-name="shipmentMethodTypeId" ignore-if-empty="true"/>
-                <econdition field-name="carrierPartyId" ignore-if-empty="true"/>
-                <select-field field-name="orderId,orderName,orderExternalId,orderStatusId,orderStatusDesc,facilityId,orderFacilityId,orderDate"/>
+                <select-field field-name="${fieldsToSelect}"/>
             </entity-find>
         </actions>
     </service>
