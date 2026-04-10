@@ -118,4 +118,13 @@ under the License.
             <parameter name="response" type="Map"/>
         </out-parameters>
     </service>
+    <service verb="create" noun="StoreIndex" type="oms-rest" location="service/createStoreIndex" method="post" authenticate="anonymous-view">
+        <description>Create Store index</description>
+        <in-parameters>
+            <parameter name="storeId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="response" type="Map"/>
+        </out-parameters>
+    </service>
 </services>
