@@ -558,7 +558,7 @@
                         </iterate>
                      </if>
                 </if>
-                
+
                 <set field="paymentPref" from="doc.paymentPrefs ? doc.paymentPrefs[0] : (orderShipment?.paymentPrefs ? orderShipment.paymentPrefs[0] : null)"/>
                 
                 <set field="billContactList" from="doc.billContacts ?: doc.contactMechs"/>
@@ -598,15 +598,7 @@
                     </if>
                 </if>
 
-                <set field="shipContact" from="null"/>
-                <if condition="billContactList">
-                    <iterate list="billContactList" entry="bc">
-                        <if condition="bc.contactMechPurposeTypeId == 'SHIPPING_LOCATION'">
-                            <set field="shipContact" from="bc"/>
-                        </if>
-                    </iterate>
-                </if>
-                <if condition="!shipContact &amp;&amp; orderId">
+                <if condition="orderId">
                     <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="shippingContactMechList" limit="1">
                         <econdition field-name="orderId" from="orderId"/>
                         <econdition field-name="contactMechPurposeTypeId" value="SHIPPING_LOCATION"/>
