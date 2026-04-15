@@ -608,7 +608,7 @@
                     </entity-find>
                     <set field="shippingContactMech" from="shippingContactMechList ? shippingContactMechList[0] : null"/>
                     <if condition="shippingContactMech?.contactMechId">
-                        <entity-find-one entity-name="org.apache.ofbiz.party.contact.PostalAddress" value-field="shippingPostalAddress">
+                        <entity-find-one entity-name="co.hotwax.oms.contact.PostalAddressAndGeo" value-field="shippingPostalAddress">
                             <field-map field-name="contactMechId" from="shippingContactMech.contactMechId"/>
                         </entity-find-one>
                         <set field="shipContact" from="shippingPostalAddress"/>
@@ -664,10 +664,11 @@
                     def shipAddr = shipContact ?: shipGroup
                     if (shipAddr) {
                         payload.put('shippingAddress', [
-                            address: shipAddr.address1,
+                            address1: shipAddr.address1,
+                            address2: shipAddr.address2,
                             city: shipAddr.city,
-                            state: shipAddr.state,
-                            zipCode: shipAddr.zipCode
+                            state: shipAddr.stateGeoName,
+                            postalCode: shipAddr.postalCode
                         ])
                     }
 
