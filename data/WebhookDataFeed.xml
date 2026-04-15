@@ -49,9 +49,9 @@
         <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:orderItemSeqId"/>
         <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:productId" fieldNameAlias="productId"/>
         <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:quantity"/>
-        <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
+        <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
+        <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
 
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
         <relAliases relationshipName="contactMechs" documentAlias="billContacts"/>
@@ -112,9 +112,9 @@
 
         <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:quantity"/>
-        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
+        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
+        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
 
         <relAliases relationshipName="org.apache.ofbiz.order.order.OrderShipment" documentAlias="orderShipments"/>
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
@@ -167,9 +167,9 @@
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
         <fields fieldSeqId="70" fieldPath="productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="quantity"/>
-        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
+        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
+        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
 
         <fields fieldSeqId="80" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:reasonEnumId" fieldNameAlias="rejectionReasonId"/>
         <fields fieldSeqId="81" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:org.apache.ofbiz.product.inventory.InventoryItemVariance:reasonEnumId" fieldNameAlias="varianceReasonEnumId"/>
