@@ -492,7 +492,7 @@
     </view-entity>
 
     <view-entity entity-name="OrderHeaderAndShipmentStatus" package="co.hotwax.shipment">
-        <description>View for Shipment and ShipmentStatus.</description>
+        <description>View for OrderHeader, Shipment and ShipmentStatus.</description>
         <member-entity entity-alias="SH" entity-name="org.apache.ofbiz.shipment.shipment.Shipment"/>
         <member-entity entity-alias="OH" entity-name="org.apache.ofbiz.order.order.OrderHeader" join-from-alias="SH">
             <key-map field-name="primaryOrderId" related="orderId"/>
@@ -501,13 +501,13 @@
             <key-map field-name="shipmentId"/>
             <key-map field-name="statusId"/>
         </member-entity>
-        <alias entity-alias="OH" name="productStoreId"/>
+        <alias entity-alias="OH" name="productStoreId" is-aggregate="true"/>
         <alias entity-alias="SH" name="shipmentId"/>
-        <alias entity-alias="SH" name="primaryOrderId"/>
-        <alias entity-alias="SH" name="shipmentTypeId"/>
-        <alias entity-alias="SH" name="shipmentMethodTypeId"/>
-        <alias entity-alias="SS" name="statusId"/>
-        <alias entity-alias="SS" name="statusDate"/>
+        <alias entity-alias="SH" name="primaryOrderId" is-aggregate="true"/>
+        <alias entity-alias="SH" name="shipmentTypeId" is-aggregate="true"/>
+        <alias entity-alias="SH" name="shipmentMethodTypeId" is-aggregate="true"/>
+        <alias entity-alias="SS" name="statusId" is-aggregate="true"/>
+        <alias entity-alias="SS" name="statusDate" is-aggregate="true" function="max"/>
     </view-entity>
 
     <!-- TODO: Check using the OrderHeaderItemShipGroup that has all the fields similar to this view.
