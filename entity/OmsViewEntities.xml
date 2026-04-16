@@ -501,13 +501,13 @@
             <key-map field-name="shipmentId"/>
             <key-map field-name="statusId"/>
         </member-entity>
-        <alias entity-alias="OH" name="productStoreId" is-aggregate="true"/>
+        <alias entity-alias="OH" name="productStoreId"/>
         <alias entity-alias="SH" name="shipmentId"/>
-        <alias entity-alias="SH" name="primaryOrderId" is-aggregate="true"/>
-        <alias entity-alias="SH" name="shipmentTypeId" is-aggregate="true"/>
-        <alias entity-alias="SH" name="shipmentMethodTypeId" is-aggregate="true"/>
-        <alias entity-alias="SS" name="statusId" is-aggregate="true"/>
-        <alias entity-alias="SS" name="statusDate" is-aggregate="true" function="max"/>
+        <alias entity-alias="SH" name="primaryOrderId"/>
+        <alias entity-alias="SH" name="shipmentTypeId"/>
+        <alias entity-alias="SH" name="shipmentMethodTypeId"/>
+        <alias entity-alias="SS" name="statusId"/>
+        <alias entity-alias="SS" name="statusDate"/>
     </view-entity>
 
     <!-- TODO: Check using the OrderHeaderItemShipGroup that has all the fields similar to this view.

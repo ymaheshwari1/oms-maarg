@@ -596,13 +596,14 @@ under the License.
                 </script>
 
                 <!-- Fetch packed shipments with STOREPICKUP method -->
-                <entity-find entity-name="co.hotwax.shipment.OrderHeaderAndShipmentStatus" list="shipments">
+                <entity-find entity-name="co.hotwax.shipment.OrderHeaderAndShipmentStatus" list="shipments" distinct="true">
                     <econdition field-name="statusId" value="SHIPMENT_PACKED"/>
                     <econdition field-name="shipmentMethodTypeId" value="STOREPICKUP"/>
                     <econdition field-name="shipmentTypeId" value="SALES_SHIPMENT"/>
                     <econdition field-name="productStoreId" from="productStoreId"/>
                     <econdition field-name="statusDate" operator="greater-equals" from="packedDateStart"/>
                     <econdition field-name="statusDate" operator="less-equals" from="packedDateEnd"/>
+                    <select-field field-name="shipmentId"/>
                     <use-iterator/>
                 </entity-find>
 
