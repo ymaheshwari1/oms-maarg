@@ -429,15 +429,26 @@ under the License.
                         def capacity = storeHours[capacityField]
 
                         boolean isValidOrder = false
-                        LocalTime sundayOpenTime = storeHours['sundayStartTime'].get(0).toLocalTime()
-                        long sundayCapacitySeconds = (storeHours['sundayCapacity'].get(0) instanceof Double ? storeHours['sundayCapacity'].get(0).longValue() : Long.parseLong(storeHours['sundayCapacity'].get(0).toString())) / 1000
-                        LocalTime sundayCloseTime = sundayOpenTime.plusSeconds(sundayCapacitySeconds)
+                        LocalTime sundayOpenTime = null
+                        LocalTime sundayCloseTime = null
+                        LocalTime storeOpenTime = null
+                        LocalTime storeCloseTime = null
 
-                        LocalTime storeOpenTime = startTime.get(0).toLocalTime()
-                        long capacitySeconds = (capacity.get(0) instanceof Double ? capacity.get(0).longValue() : Long.parseLong(capacity.get(0).toString())) / 1000
-                        LocalTime storeCloseTime = storeOpenTime.plusSeconds(capacitySeconds)
+                        if (storeHours['sundayStartTime']?.get(0) != null &amp;&amp; storeHours['sundayCapacity']?.get(0) != null) {
+                            sundayOpenTime = storeHours['sundayStartTime'].get(0).toLocalTime()
+                            def sundayCap = storeHours['sundayCapacity'].get(0)
+                            long sundayCapacitySeconds = (sundayCap instanceof Double ? sundayCap.longValue() : Long.parseLong(sundayCap.toString())) / 1000
+                            sundayCloseTime = sundayOpenTime.plusSeconds(sundayCapacitySeconds)
+                        }
 
-                        if ((startTime &amp;&amp; capacity) &amp;&amp; (storeHours['sundayStartTime'] &amp;&amp; storeHours['sundayCapacity'])) {
+                        if (startTime?.get(0) != null &amp;&amp; capacity?.get(0) != null) {
+                            storeOpenTime = startTime.get(0).toLocalTime()
+                            def cap = capacity.get(0)
+                            long capacitySeconds = (cap instanceof Double ? cap.longValue() : Long.parseLong(cap.toString())) / 1000
+                            storeCloseTime = storeOpenTime.plusSeconds(capacitySeconds)
+                        }
+
+                        if (storeOpenTime != null &amp;&amp; storeCloseTime != null) {
                             isValidOrder = orderTime.isAfter(storeCloseTime) || orderTime.isBefore(storeOpenTime)
                         }
                     </script>
@@ -585,12 +596,14 @@ under the License.
                 </script>
 
                 <!-- Fetch packed shipments with STOREPICKUP method -->
-                <entity-find entity-name="co.hotwax.shipment.ShipmentAndShipmentStatus" list="shipments" distinct="true">
+                <entity-find entity-name="co.hotwax.shipment.OrderHeaderAndShipmentStatus" list="shipments" distinct="true">
                     <econdition field-name="statusId" value="SHIPMENT_PACKED"/>
                     <econdition field-name="shipmentMethodTypeId" value="STOREPICKUP"/>
                     <econdition field-name="shipmentTypeId" value="SALES_SHIPMENT"/>
+                    <econdition field-name="productStoreId" from="productStoreId"/>
                     <econdition field-name="statusDate" operator="greater-equals" from="packedDateStart"/>
                     <econdition field-name="statusDate" operator="less-equals" from="packedDateEnd"/>
+                    <select-field field-name="shipmentId"/>
                     <use-iterator/>
                 </entity-find>
 
