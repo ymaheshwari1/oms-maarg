@@ -494,7 +494,6 @@ under the License.
                 <set field="orderDetail.shipGroups" from="shipGroups"/>
                 <entity-find entity-name="org.apache.ofbiz.order.order.OrderContactMech" list="orderContactMechList">
                     <econdition field-name="orderId"/>
-                    <econdition field-name="contactMechPurposeTypeId"/>
                     <order-by field-name="-lastUpdatedStamp"/>
                 </entity-find>
 
