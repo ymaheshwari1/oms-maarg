@@ -241,7 +241,7 @@ under the License.
             <entity-find-one entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" value-field="productStoreEmailSetting">
                 <field-map field-name="productStoreId" from="order.productStoreId"/>
                 <field-map field-name="emailType" from="emailType"/>
-                <select-field field-name="emailType,subject,systemMessageRemoteId"/>
+                <select-field field-name="emailType,subject,systemMessageRemoteId,commGatewayAuthId"/>
             </entity-find-one>
             <if condition="!productStoreEmailSetting">
                 <return error="true" message="Product Store Email Setting for ${emailType} not defined, not creating related system message."/>
@@ -252,6 +252,7 @@ under the License.
                 'emailType': emailType,
                 'emailAddress': emailAddress,
                 'systemMessageRemoteId': productStoreEmailSetting.systemMessageRemoteId,
+                'commGatewayAuthId': productStoreEmailSetting.commGatewayAuthId,
                 'subject': productStoreEmailSetting.subject,
                 'orderId': order.orderId,
                 'orderName': order.orderName,
