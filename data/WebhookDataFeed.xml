@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <entity-facade-xml type="ext-upgrade">
-
-    <moqui.basic.EnumerationType description="Webhook Event Topics" enumTypeId="WebhookTopic"/>
-
-    <moqui.basic.Enumeration enumId="ORDER_CREATED" enumTypeId="WebhookTopic" description="Order Created"/>
-    <moqui.basic.Enumeration enumId="ORDER_APPROVED" enumTypeId="WebhookTopic" description="Order Approved"/>
-    <moqui.basic.Enumeration enumId="ORDER_COMPLETED" enumTypeId="WebhookTopic" description="Order Completed"/>
-
-    <moqui.basic.Enumeration enumId="ITEM_BROKERED" enumTypeId="WebhookTopic" description="Item Brokered"/>
-    <moqui.basic.Enumeration enumId="ITEM_REJECTED" enumTypeId="WebhookTopic" description="Item Rejected"/>
-
-    <moqui.basic.Enumeration enumId="SHIPMENT_APPROVED" enumTypeId="WebhookTopic" description="Shipment Approved"/>
-    <moqui.basic.Enumeration enumId="SHIPMENT_PACKED" enumTypeId="WebhookTopic" description="Shipment Packed"/>
-    <moqui.basic.Enumeration enumId="SHIPMENT_SHIPPED" enumTypeId="WebhookTopic" description="Shipment Shipped"/>
-
-    <!-- System Message Type for Notifications -->
-    <moqui.service.message.SystemMessageType systemMessageTypeId="WebhookNotification"
-                                             description="Webhook Event Notification"
-                                             sendServiceName="co.hotwax.webhook.WebhookServices.send#WebhookNotification"/>
-
-
     <dataDocuments dataDocumentId="WebhookOrderStatus" documentName="WebhookOrderStatus"
                    primaryEntityName="org.apache.ofbiz.order.order.OrderStatus" >
         <fields fieldSeqId="01" fieldPath="orderStatusId"/>
@@ -58,6 +38,10 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
@@ -65,9 +49,9 @@
         <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:orderItemSeqId"/>
         <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:productId" fieldNameAlias="productId"/>
         <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:quantity"/>
-        <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
+        <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
         <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
+        <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.order.order.OrderHeader:shipGroups:items:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
 
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
         <relAliases relationshipName="contactMechs" documentAlias="billContacts"/>
@@ -93,6 +77,11 @@
         <fields fieldSeqId="14" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:org.apache.ofbiz.shipment.shipment.ShipmentMethodType:description" fieldNameAlias="shipmentMethodDesc"/>
         <fields fieldSeqId="15" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingIdNumber" fieldNameAlias="trackingCode"/>
         <fields fieldSeqId="16" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingUrl" fieldNameAlias="trackingUrl"/>
+        <fields fieldSeqId="17" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:address1" fieldNameAlias="originAddress1"/>
+        <fields fieldSeqId="18" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:city" fieldNameAlias="originCity"/>
+        <fields fieldSeqId="19" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="originState"/>
+        <fields fieldSeqId="1a" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:postalCode" fieldNameAlias="originZipCode"/>
+        <fields fieldSeqId="1b" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:contactMechPurposeTypeId" fieldNameAlias="originContactMechPurposeTypeId"/>
 
         <fields fieldSeqId="20" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderId"/>
         <fields fieldSeqId="21" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderName" fieldNameAlias="orderName"/>
@@ -113,15 +102,19 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
 
         <fields fieldSeqId="70" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:quantity"/>
-        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
+        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
+        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentItem:org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
 
         <relAliases relationshipName="org.apache.ofbiz.order.order.OrderShipment" documentAlias="orderShipments"/>
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
@@ -165,14 +158,18 @@
         <fields fieldSeqId="50" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechId"/>
         <fields fieldSeqId="51" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:contactMechPurposeTypeId" fieldNameAlias="contactMechPurposeTypeId"/>
         <fields fieldSeqId="52" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:toName" fieldNameAlias="billToName"/>
+        <fields fieldSeqId="53" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:address1" fieldNameAlias="address1"/>
+        <fields fieldSeqId="54" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:city" fieldNameAlias="city"/>
+        <fields fieldSeqId="55" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="state"/>
+        <fields fieldSeqId="56" fieldPath="org.apache.ofbiz.order.order.OrderHeader:contactMechs:postalAddress:postalCode" fieldNameAlias="zipCode"/>
 
         <fields fieldSeqId="60" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:orderAdjustmentTypeId" fieldNameAlias="adjustmentTypeId"/>
         <fields fieldSeqId="61" fieldPath="org.apache.ofbiz.order.order.OrderHeader:adjustments:amount" fieldNameAlias="adjustmentAmount"/>
         <fields fieldSeqId="70" fieldPath="productId" fieldNameAlias="productIdInternal"/>
         <fields fieldSeqId="71" fieldPath="quantity"/>
-        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="product_name"/>
+        <fields fieldSeqId="72" fieldPath="org.apache.ofbiz.product.product.Product:productName" fieldNameAlias="productName"/>
         <fields fieldSeqId="73" fieldPath="org.apache.ofbiz.product.product.Product:identifications:idValue" fieldNameAlias="upc"/>
-        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upc_type"/>
+        <fields fieldSeqId="74" fieldPath="org.apache.ofbiz.product.product.Product:identifications:goodIdentificationTypeId" fieldNameAlias="upcType"/>
 
         <fields fieldSeqId="80" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:reasonEnumId" fieldNameAlias="rejectionReasonId"/>
         <fields fieldSeqId="81" fieldPath="org.apache.ofbiz.order.order.OrderItemShipGrpInvRes:org.apache.ofbiz.product.inventory.InventoryItemDetail:org.apache.ofbiz.product.inventory.InventoryItemVariance:reasonEnumId" fieldNameAlias="varianceReasonEnumId"/>
@@ -193,5 +190,5 @@
     </moqui.entity.feed.DataFeed>
 
     <co.hotwax.datamanager.DataManagerConfig configId="SYNC_SHOPIFY_ORDER" enableDataFeed="Y"/>
-    
+
 </entity-facade-xml>
