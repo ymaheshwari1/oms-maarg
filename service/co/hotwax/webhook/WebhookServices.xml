@@ -95,7 +95,7 @@
                          Use require-new-transaction so it commits immediately before send#WebhookNotification
                          tries to read/update it in its own require-new-transaction calls. -->
                     <service-call name="create#moqui.service.message.SystemMessage" out-map="createSmsgOut"
-                                  require-new-transaction="true"
+                                  transaction="force-new"
                                   in-map="[systemMessageTypeId: 'WebhookNotification',
                                            messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced',
                                            docControl: (orderId ?: shipmentId)]"/>
@@ -149,7 +149,7 @@
             <!-- Mark as sending -->
             <service-call name="update#moqui.service.message.SystemMessage"
                           in-map="[systemMessageId: systemMessageId, statusId: 'SmsgSending']"
-                          require-new-transaction="true"/>
+                          transaction="force-new"/>
 
             <!-- Build HTTP request -->
             <set field="restClient" from="ec.service.rest().method('post').uri(remoteUrl)"/>
@@ -776,7 +776,7 @@
                 ]]></script>
 
                 <service-call name="co.hotwax.webhook.WebhookServices.dispatch#WebhookEvent"
-                              require-new-transaction="true"
+                              transaction="force-new"
                               in-map="[topicEnumId: topicEnumId, orderId: orderId, shipmentId: shipmentId, orderItemSeqId: doc.orderItemSeqId,
                                       eventContext: [payload: payload, previousStatus: previousStatus]]" ignore-error="true"/>
 
