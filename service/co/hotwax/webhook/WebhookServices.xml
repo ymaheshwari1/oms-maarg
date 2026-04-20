@@ -17,14 +17,14 @@
         <actions>
 
             <set field="nowDate" from="ec.user.nowTimestamp"/>
-            <log level="warn" message=">>> [WebhookServices] dispatch#WebhookEvent called with topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, eventContext=${eventContext}"/>
+            <log level="warn" message="[WebhookServices] dispatch#WebhookEvent called with topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, eventContext=${eventContext}"/>
 
             <entity-find entity-name="co.hotwax.common.WebhookConfig" list="subscribers">
                 <econdition field-name="topicEnumId" from="topicEnumId"/>
             </entity-find>
 
             <if condition="!subscribers">
-                <log level="warn" message=">>> [WebhookServices] No subscribers found for topic ${topicEnumId}. Exiting."/>
+                <log level="warn" message="[WebhookServices] No subscribers found for topic ${topicEnumId}. Exiting."/>
                 <return/>
             </if>
 
@@ -38,7 +38,7 @@
             <set field="payload" from="eventContext?.payload"/>
 
             <if condition="!payload">
-                <log level="warn" message=">>> [WebhookServices] Missing payload in eventContext for topic ${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}. Exiting."/>
+                <log level="warn" message="[WebhookServices] Missing payload in eventContext for topic ${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}. Exiting."/>
                 <return/>
             </if>
             <!-- fallback/global secret for test/back-compat -->
@@ -49,7 +49,7 @@
                 <field-map field-name="systemMessageTypeId" value="WebhookNotification"/>
             </entity-find-one>
             <if condition="!messageType">
-                <log level="error" message=">>> [WebhookServices] Missing SystemMessageType WebhookNotification. Aborting."/>
+                <log level="error" message="[WebhookServices] Missing SystemMessageType WebhookNotification. Aborting."/>
                 <return/>
             </if>
 
@@ -85,7 +85,7 @@
                         <field-map field-name="remoteMessageId" from="eventId"/>
                     </entity-find-one>
                     <if condition="existingSmsg">
-                        <log level="info" message=">>> [WebhookServices] duplicate webhook skipped topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, eventId=${eventId}, existingSystemMessageId=${existingSmsg.systemMessageId}"/>
+                        <log level="info" message="[WebhookServices] duplicate webhook skipped topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, eventId=${eventId}, existingSystemMessageId=${existingSmsg.systemMessageId}"/>
                         <continue/>
                     </if>
 
@@ -104,7 +104,7 @@
                     <service-call name="co.hotwax.webhook.WebhookServices.send#WebhookNotification" ignore-error="true"
                                   in-map="[systemMessageId: createSmsgOut.systemMessageId, remoteUrl: subscriber.remoteUrl,
                                            hmacSecret: hmacSecret, hmacHeaderName: hmacHeaderName]"/>
-                    <log level="info" message=">>> [WebhookServices] queued webhook topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, systemMessageId=${createSmsgOut.systemMessageId}, eventId=${eventId}, remoteUrl=${subscriber.remoteUrl}"/>
+                    <log level="info" message="[WebhookServices] queued webhook topic=${topicEnumId}, orderId=${orderId}, shipmentId=${shipmentId}, systemMessageId=${createSmsgOut.systemMessageId}, eventId=${eventId}, remoteUrl=${subscriber.remoteUrl}"/>
                 </if>
             </iterate>
         </actions>
@@ -125,21 +125,21 @@
             ]]></script>
             <entity-find-one entity-name="moqui.service.message.SystemMessage" value-field="systemMessage"/>
             <if condition="!systemMessage">
-                <log level="warn" message=">>> [WebhookServices] send#WebhookNotification skipped, SystemMessage not found for systemMessageId=${systemMessageId}"/>
+                <log level="warn" message="[WebhookServices] send#WebhookNotification skipped, SystemMessage not found for systemMessageId=${systemMessageId}"/>
                 <return/>
             </if>
 
             <if condition="systemMessage.statusId == 'SmsgSent'">
-                <log level="info" message=">>> [WebhookServices] send#WebhookNotification skipped, already sent systemMessageId=${systemMessageId}"/>
+                <log level="info" message="[WebhookServices] send#WebhookNotification skipped, already sent systemMessageId=${systemMessageId}"/>
                 <return/>
             </if>
             <if condition="systemMessage.statusId != 'SmsgProduced' &amp;&amp; systemMessage.statusId != 'SmsgError'">
-                <log level="warn" message=">>> [WebhookServices] send#WebhookNotification skipped, invalid current status ${systemMessage.statusId} for systemMessageId=${systemMessageId}"/>
+                <log level="warn" message="[WebhookServices] send#WebhookNotification skipped, invalid current status ${systemMessage.statusId} for systemMessageId=${systemMessageId}"/>
                 <return/>
             </if>
 
             <if condition="!hmacSecret">
-                <log level="error" message=">>> [WebhookServices] send#WebhookNotification missing hmacSecret for systemMessageId=${systemMessageId}, remoteUrl=${remoteUrl}"/>
+                <log level="error" message="[WebhookServices] send#WebhookNotification missing hmacSecret for systemMessageId=${systemMessageId}, remoteUrl=${remoteUrl}"/>
                 <!-- Set to error from current status (should be SmsgProduced) -->
                 <service-call name="update#moqui.service.message.SystemMessage"
                               in-map="[systemMessageId: systemMessageId, statusId: 'SmsgError']"/>
@@ -181,7 +181,7 @@
                 <script>restClient.addHeader("X-Webhook-Occurred-At", webhookOccurredAt.toString())</script>
             </if>
             <script>restClient.addHeader("X-Webhook-Signature-Version", "v1")</script>
-            <log level="info" message=">>> [WebhookServices] HMAC header added for systemMessageId=${systemMessageId}, header=${hmacHeaderName}"/>
+            <log level="info" message="[WebhookServices] HMAC header added for systemMessageId=${systemMessageId}, header=${hmacHeaderName}"/>
             <script>restClient.text(messageBody)</script>
 
             <script>
@@ -238,7 +238,7 @@
                     <set field="logStatus" from="doc.itemStatusId"/>
                 </if>
                 <set field="logOrderItemSeqId" from="doc.eventOrderItemSeqId ?: doc.orderItemSeqId"/>
-                <log level="info" message=">>> [WebhookDataFeed] docType=${doc._type}, id=${doc._id}, status=${logStatus}, orderItemSeqId=${logOrderItemSeqId}"/>
+                <log level="info" message="[WebhookDataFeed] docType=${doc._type}, id=${doc._id}, status=${logStatus}, orderItemSeqId=${logOrderItemSeqId}"/>
 
                 <service-call name="co.hotwax.webhook.WebhookServices.process#WebhookDataDocument"
                               in-map="[doc: doc, feedStamp: feedStamp]" ignore-error="true"/>
@@ -252,16 +252,33 @@
                 <parameter name="_type"/>
                 <parameter name="_id"/>
                 <!-- Common Order Info -->
-                <parameter name="orderId"/><parameter name="orderName"/><parameter name="orderItemSeqId"/><parameter name="orderTypeId"/>
+                <parameter name="orderId"/>
+                <parameter name="orderName"/>
+                <parameter name="orderItemSeqId"/>
+                <parameter name="orderTypeId"/>
                 <!-- Events -->
-                <parameter name="eventDate"/><parameter name="eventStatusId"/><parameter name="eventStatusDatetime"/><parameter name="eventUserLoginId"/><parameter name="eventStatusLastUpdatedStamp"/><parameter name="eventOrderItemSeqId"/><parameter name="eventOrderStatusId"/>
+                <parameter name="eventDate"/>
+                <parameter name="eventStatusId"/>
+                <parameter name="eventStatusDatetime"/>
+                <parameter name="eventUserLoginId"/>
+                <parameter name="eventStatusLastUpdatedStamp"/>
+                <parameter name="eventOrderItemSeqId"/>
+                <parameter name="eventOrderStatusId"/>
                 <parameter name="itemStatusId"/>
-                <parameter name="eventShipmentStatusId"/><parameter name="shipmentId"/>
+                <parameter name="eventShipmentStatusId"/>
+                <parameter name="shipmentId"/>
                 <!-- Facilities & Locations -->
-                <parameter name="originFacilityId"/><parameter name="facilityName"/><parameter name="originAddress1"/>
-                <parameter name="storeName"/><parameter name="currencyUom"/><parameter name="salesChannelDesc"/>
+                <parameter name="originFacilityId"/>
+                <parameter name="facilityName"/>
+                <parameter name="originAddress1"/>
+                <parameter name="storeName"/>
+                <parameter name="currencyUom"/>
+                <parameter name="salesChannelDesc"/>
                 <!-- Item Res -->
-                <parameter name="productId"/><parameter name="productIdInternal"/><parameter name="sku"/><parameter name="upc"/>
+                <parameter name="productId"/>
+                <parameter name="productIdInternal"/>
+                <parameter name="sku"/>
+                <parameter name="upc"/>
                 <!-- Collections -->
                 <parameter name="shipGroups" type="List"><parameter name="shipGroup" type="Map"/></parameter>
                 <parameter name="items" type="List"><parameter name="item" type="Map"/></parameter>
@@ -372,7 +389,7 @@
                         status: eventStatusId,
                         userId: (doc.eventStatusUserLogin ?: doc.statusUserLogin ?: doc.createdBy) ?: ec.user.userId ?: 'system',
                         billTo: null,
-                        eventDate: ((doc.eventStatusDatetime ?: eventStatusDatetime) ?: doc.orderEntryDate ?: ec.user.nowTimestamp)?.toInstant()?.toString()
+                        eventDate: ec.l10n.parseTimestamp(((doc.eventStatusDatetime ?: eventStatusDatetime) ?: doc.orderEntryDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                     ]"/>
                     <!-- Order specific item iterator -->
                     <script><![CDATA[
@@ -460,7 +477,7 @@
                                 status: doc.eventStatusId,
                                 userId: doc.eventUserLoginId ?: ec.user.userId ?: 'system',
                                 shippingMethod: shippingMethod,
-                                eventDate: (doc.eventDate ?: ec.user.nowTimestamp)?.toInstant()?.toString()
+                                eventDate: ec.l10n.parseTimestamp((eventDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                             ]"/>
                             
                             <set field="itemsList" from="[]"/>
@@ -511,7 +528,7 @@
                      </if>
                      <!-- Skip if facilityId is _NA_, allow if null for runtime lookup -->
                      <if condition="topicEnumId == 'ITEM_BROKERED' &amp;&amp; itemSgFacilityId == '_NA_'">
-                         <log level="info" message=">>> [WebhookServices] Skipping ITEM_BROKERED for orderId=${doc.orderId}, item=${doc.orderItemSeqId}: shipGroup=${itemSgSeqId} has facilityId=_NA_ (brokering queue, not yet assigned to real facility)"/>
+                         <log level="info" message="[WebhookServices] Skipping ITEM_BROKERED for orderId=${doc.orderId}, item=${doc.orderItemSeqId}: shipGroup=${itemSgSeqId} has facilityId=_NA_ (brokering queue, not yet assigned to real facility)"/>
                      <else>
                      <set field="shouldDispatch" from="true"/>
                      </else>
@@ -553,7 +570,7 @@
                         productName: doc.productName,
                         previousStatus: 'ITEM_APPROVED',
                         status: topicEnumId,
-                        eventDate: (doc.eventDate ?: ec.user.nowTimestamp)?.toInstant()?.toString()
+                        eventDate: ec.l10n.parseTimestamp((doc.eventDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                     ]"/>
                 </if>
             </if>
@@ -571,7 +588,7 @@
                      ]]></script>
                      <set field="itemShipGroupSeqId" from="itemSgSeqId ?: (doc.itemShipGroupSeqId instanceof List ? doc.itemShipGroupSeqId.find{it} : doc.itemShipGroupSeqId)"/>
                      <if condition="itemShipGroupSeqId">
-                        <log level="info" message=">>> [WebhookServices] shipGroup match: itemShipGroupSeqId=${itemShipGroupSeqId}, shipGroups=${doc.shipGroups?.collect{it.shipGroupSeqId+':'+it.facilityId}}"/>
+                        <log level="info" message="[WebhookServices] shipGroup match: itemShipGroupSeqId=${itemShipGroupSeqId}, shipGroups=${doc.shipGroups?.collect{it.shipGroupSeqId+':'+it.facilityId}}"/>
                         <iterate list="doc.shipGroups" entry="shipGroupEntry">
                             <if condition="shipGroupEntry.shipGroupSeqId == itemShipGroupSeqId">
                                 <set field="shipGroup" from="shipGroupEntry"/>
