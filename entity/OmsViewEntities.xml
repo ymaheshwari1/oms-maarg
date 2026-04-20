@@ -491,13 +491,17 @@
         <alias entity-alias="TDCW" name="sundayCapacity"/>
     </view-entity>
 
-    <view-entity entity-name="ShipmentAndShipmentStatus" package="co.hotwax.shipment">
-        <description>View for Shipment and ShipmentStatus.</description>
+    <view-entity entity-name="OrderHeaderAndShipmentStatus" package="co.hotwax.shipment">
+        <description>View for OrderHeader, Shipment and ShipmentStatus.</description>
         <member-entity entity-alias="SH" entity-name="org.apache.ofbiz.shipment.shipment.Shipment"/>
+        <member-entity entity-alias="OH" entity-name="org.apache.ofbiz.order.order.OrderHeader" join-from-alias="SH">
+            <key-map field-name="primaryOrderId" related="orderId"/>
+        </member-entity>
         <member-entity entity-alias="SS" entity-name="org.apache.ofbiz.shipment.shipment.ShipmentStatus" join-from-alias="SH">
             <key-map field-name="shipmentId"/>
             <key-map field-name="statusId"/>
         </member-entity>
+        <alias entity-alias="OH" name="productStoreId"/>
         <alias entity-alias="SH" name="shipmentId"/>
         <alias entity-alias="SH" name="primaryOrderId"/>
         <alias entity-alias="SH" name="shipmentTypeId"/>
