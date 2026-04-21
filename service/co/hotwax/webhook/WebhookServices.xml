@@ -256,6 +256,8 @@
                 <parameter name="orderName"/>
                 <parameter name="orderItemSeqId"/>
                 <parameter name="orderTypeId"/>
+                <parameter name="grandTotal"/>
+                <parameter name="productName"/>
                 <!-- Events -->
                 <parameter name="eventDate"/>
                 <parameter name="eventStatusId"/>
