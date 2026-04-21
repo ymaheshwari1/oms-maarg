@@ -214,7 +214,7 @@ under the License.
             <entity-find-one entity-name="co.hotwax.shopify.ShopifyShopTypeMapping" value-field="shopifyShopTypeMapping" cache="true">
                 <field-map field-name="mappedTypeId" value="SHOPIFY_EMAIL"/>
                 <field-map field-name="mappedKey" from="order.productStoreId"/>
-                <field-map field-name="shopId" from="shopifyShop?.get(0)?.shopId"/>
+                <field-map field-name="shopId" from="shopifyShop[0]?.shopId"/>
             </entity-find-one>
             <set field="order.brandName" from="shopifyShopTypeMapping?.mappedValue"/>
 
@@ -222,7 +222,7 @@ under the License.
                 <econdition field-name="integrationTypeId" value="SHOPIFY_EMAIL"/>
                 <econdition field-name="mappingKey" value="shopifyemail.sandbox"/>
             </entity-find>
-            <set field="order.sandbox" from="sandboxValue?.get(0)?.mappingValue"/>
+            <set field="order.sandbox" from="sandboxValue[0]?.mappingValue"/>
 
             <set field="partyIdTo" from="order.roles?.find { it.roleTypeId == 'BILL_TO_CUSTOMER' }?.partyId "/>
             <entity-find-one entity-name="org.apache.ofbiz.party.party.Person" value-field="person">
@@ -271,31 +271,53 @@ under the License.
                 'adjustments': order.adjustments,
                 'items': itemList
             ]"/>
+            <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
+                          in-map="[communicationEventTypeId:'SYS_MSG_EMAIL_COMM',
+                                  content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(orderDetail),
+                                  datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
+                                  subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
+                                  reasonEnumId:reasonEnumId, statusId:'COM_ENTERED']"
+                          out-map="parentCommEvent" transaction="force-new"/>
             
-            <service-call name="org.moqui.impl.SystemMessageServices.queue#SystemMessage"
-                          in-map="[systemMessageTypeId:enumValue.relatedEnumId,
-                    messageText:org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(orderDetail), productStoreId:order.productStoreId]" out-map="systemMessage"/>
-            <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent" in-map="[communicationEventTypeId:'SYS_MSG_EMAIL_COMM',
-                    content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(orderDetail), datetimeStarted: ec.user.nowTimestamp, messageId: systemMessage.systemMessageId, partyIdTo: partyIdTo, toString: emailAddress, subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress, reasonEnumId:reasonEnumId]" out-map="communicationEvent"/>
-            <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder" in-map="[orderId:order.orderId, communicationEventId:communicationEvent.communicationEventId]"/>
+            <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder"
+                          in-map="[orderId:order.orderId, communicationEventId:parentCommEvent.communicationEventId]" transaction="force-new"/>
+
+            <service-call name="co.hotwax.orderledger.order.email.EmailServices.send#EmailRequest"
+                          in-map="[payload: orderDetail, systemMessageRemoteId: productStoreEmailSetting.systemMessageRemoteId]" out-map="result"/>
+
+            <set field="unigateResponse" from="result.response?.gatewayResponse"/>
+            <set field="gatewayResponse" from="unigateResponse?.response"/>
+            <set field="statusCode" from="unigateResponse?.statusCode"/>
+
+            <set field="childEventStatusId" from="(statusCode &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
+            <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
+                          in-map="[communicationEventTypeId:'SYS_MSG_EMAIL_COMM',
+                                  parentCommEventId: parentCommEvent.communicationEventId,
+                                  content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(result.response),
+                                  datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
+                                  subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
+                                  reasonEnumId:reasonEnumId, statusId: childEventStatusId]"
+                          out-map="childCommEvent" transaction="force-new"/>
+
+            <if condition="statusCode &amp;&amp; statusCode &gt;= 300">
+                <return error="true" message="Failed to send email for order ${order.orderId} with error: ${gatewayResponse}"/>
+            </if>
         </actions>
     </service>
 
     <service verb="send" noun="EmailRequest">
-        <implements service="org.moqui.impl.SystemMessageServices.send#SystemMessage"/>
+        <in-parameters>
+            <parameter name="systemMessageRemoteId" required="true"/>
+            <parameter name="payload" type="Map" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="response" type="Map"/>
+        </out-parameters>
         <actions>
-            <entity-find-one entity-name="moqui.service.message.SystemMessageAndType" value-field="systemMessage"/>
-
-            <set field="payload" from="org.moqui.impl.context.ContextJavaUtil.jacksonMapper.readValue(systemMessage.messageText, Map.class)"/>
-
             <if condition="!payload || !payload.productStoreId || !payload.emailType">
                 <return error="true" message="Payload must contain productStoreId and emailType."/>
             </if>
 
-            <if condition="!payload.systemMessageRemoteId">
-                <return error="true" message="Payload must contain systemMessageRemoteId."/>
-            </if>
-            <set field="systemMessageRemoteId" from="payload.systemMessageRemoteId"/>
             <!-- subject is used as the metric for the email initially, this can be changed later if needed -->
             <set field="payload.subject" from="payload.subject"/>
 
@@ -323,7 +345,7 @@ under the License.
             if (!url.endsWith("/")) {
                 url += "/"
             }
-            url += systemMessage.sendPath
+            url += 'communication/email'
             restClient.uri(url)
 
             // Add Content-Type header
