@@ -222,7 +222,7 @@ under the License.
                 <econdition field-name="integrationTypeId" value="SHOPIFY_EMAIL"/>
                 <econdition field-name="mappingKey" value="shopifyemail.sandbox"/>
             </entity-find>
-            <set field="order.sandbox" from="sandboxValue?.get(0)?.mappingValue"/>
+            <set field="order.sandbox" from="(sandboxValue[0]?.mappingValue == 'true')"/>
 
             <set field="partyIdTo" from="order.roles?.find { it.roleTypeId == 'BILL_TO_CUSTOMER' }?.partyId "/>
             <entity-find-one entity-name="org.apache.ofbiz.party.party.Person" value-field="person">
@@ -251,7 +251,6 @@ under the License.
                 'productStoreId': order.productStoreId,
                 'emailType': emailType,
                 'emailAddress': emailAddress,
-                'systemMessageRemoteId': productStoreEmailSetting.systemMessageRemoteId,
                 'commGatewayAuthId': productStoreEmailSetting.commGatewayAuthId,
                 'subject': productStoreEmailSetting.subject,
                 'orderId': order.orderId,
@@ -277,17 +276,17 @@ under the License.
                                   datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
                                   subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
                                   reasonEnumId:reasonEnumId, statusId:'COM_ENTERED']"
-                          out-map="parentCommEvent" transaction="force-new"/>
+                          out-map="parentCommEvent"/>
             
             <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder"
-                          in-map="[orderId:order.orderId, communicationEventId:parentCommEvent.communicationEventId]" transaction="force-new"/>
+                          in-map="[orderId:order.orderId, communicationEventId:parentCommEvent.communicationEventId]"/>
 
             <service-call name="co.hotwax.orderledger.order.email.EmailServices.send#EmailRequest"
                           in-map="[payload: orderDetail, systemMessageRemoteId: productStoreEmailSetting.systemMessageRemoteId]" out-map="result"/>
 
-            <set field="unigateResponse" from="result.response?.gatewayResponse"/>
+            <set field="unigateResponse" from="result.response"/>
             <set field="gatewayResponse" from="unigateResponse?.response"/>
-            <set field="statusCode" from="unigateResponse?.statusCode"/>
+            <set field="statusCode" from="gatewayResponse?.statusCode"/>
 
             <set field="childEventStatusId" from="(statusCode &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
             <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
@@ -297,10 +296,10 @@ under the License.
                                   datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
                                   subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
                                   reasonEnumId:reasonEnumId, statusId: childEventStatusId]"
-                          out-map="childCommEvent" transaction="force-new"/>
+                          out-map="childCommEvent"/>
 
             <if condition="statusCode &amp;&amp; statusCode &gt;= 300">
-                <return error="true" message="Failed to send email for order ${order.orderId} with error: ${gatewayResponse}"/>
+                <return message="Failed to send email of type ${emailType} for order ${order.orderId}: ${gatewayResponse}"/>
             </if>
         </actions>
     </service>
@@ -330,7 +329,6 @@ under the License.
             <if condition="!systemMessageRemote.sendUrl">
                 <return error="true" message="No sendUrl found in SystemMessageRemote with ID ${systemMessageRemoteId}"/>
             </if>
-            <set field="payload.commGatewayConfigId" from="systemMessageRemote.remoteId"/>
 
             <script><![CDATA[
             import org.moqui.util.RestClient
@@ -362,12 +360,17 @@ under the License.
             }
 
             // Execute API call
-            RestClient.RestResponse restResponse = restClient.call()
-            statusCode = restResponse.getStatusCode()
-            response = restResponse.jsonObject()
+            try {
+                RestClient.RestResponse restResponse = restClient.call()
+                int statusCode = restResponse.getStatusCode()
+                response = restResponse.jsonObject()
 
-            if (restResponse.statusCode < 200 || restResponse.statusCode >= 300) {
-                ec.message.addError("Unsuccessful with status code: ${statusCode} and response: ${response}")
+                if (statusCode < 200 || statusCode >= 300) {
+                    ec.message.addError("Unsuccessful with status code: ${statusCode} and response: ${response}")
+                }
+            } catch (Exception e) {
+                ec.logger.error(e.getMessage())
+                response = [response: [statusCode: 500, error: "Connection error: " + e.getMessage()]]
             }
         ]]></script>
         </actions>
