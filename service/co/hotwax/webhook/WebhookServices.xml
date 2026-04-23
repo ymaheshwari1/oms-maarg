@@ -307,6 +307,7 @@
                 <parameter name="identifications" type="List"><parameter name="identification" type="Map"/></parameter>
                 <parameter name="itemRes" type="List"><parameter name="resource" type="Map"/></parameter>
                 <parameter name="routeSegments" type="List"><parameter name="routeSegment" type="Map"/></parameter>
+                <parameter name="facilityAddress" type="Map"/>
             </parameter>
             <parameter name="feedStamp" type="Timestamp"/>
         </in-parameters>
@@ -732,7 +733,7 @@
                     if (docType == 'WebhookShipmentStatus' || shipmentId) {
                         payload.put('shipFromAddress', [
                             storeName: doc.storeName,
-                            address: doc.originAddress1
+                            address: doc?.facilityAddress[0]?.originAddress1
                         ])
                     }
                     if (!payload.shippingMethod) payload.put('shippingMethod', shipGroup?.shipmentMethodDesc ?: shipGroup?.shipmentMethodTypeId)
