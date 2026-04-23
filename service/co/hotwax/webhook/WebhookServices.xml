@@ -258,6 +258,11 @@
                 <parameter name="orderTypeId"/>
                 <parameter name="grandTotal"/>
                 <parameter name="productName"/>
+                <!-- Common Shipment Info -->
+                <parameter name="trackingCode"/>
+                <parameter name="trackingUrl"/>
+                <parameter name="shipmentMethodDesc"/>
+                <parameter name="shipmentMethodTypeId"/>
                 <!-- Events -->
                 <parameter name="eventDate"/>
                 <parameter name="eventStatusId"/>
@@ -479,6 +484,8 @@
                                 status: doc.eventStatusId,
                                 userId: doc.eventUserLoginId ?: ec.user.userId ?: 'system',
                                 shippingMethod: shippingMethod,
+                                trackingCode: doc.trackingCode,
+                                trackingUrl: doc.trackingUrl,
                                 eventDate: ec.l10n.parseTimestamp((eventDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                             ]"/>
                             
@@ -657,17 +664,17 @@
                 <if condition="!adjustmentList &amp;&amp; orderShipment">
                     <set field="adjustmentList" from="orderShipment.adjustments"/>
                 </if>
-                <set field="shippingCost" from="0"/>
+                <set field="shippingCost" value="0" type="BigDecimal"/>
                 <if condition="adjustmentList">
                     <iterate list="adjustmentList" entry="adjustment">
                         <if condition="adjustment.adjustmentTypeId == 'SHIPPING_CHARGES'">
-                            <set field="shippingCost" from="shippingCost + (adjustment.adjustmentAmount ?: 0)"/>
+                            <set field="shippingCost" from="shippingCost + (adjustment.adjustmentAmount ?: 0).toBigDecimal()"/>
                         </if>
                     </iterate>
                 </if>
                 
-                <set field="grandTotal" from="orderShipment?.grandTotal ?: doc.grandTotal ?: 0"/>
-                <set field="orderPrice" from="grandTotal - shippingCost"/>
+                <set field="grandTotal" from="orderShipment?.grandTotal ?: doc.grandTotal ?: 0" type="BigDecimal"/>
+                <set field="orderPrice" from="grandTotal - shippingCost" type="BigDecimal"/>
                 <set field="countryCode" from="null"/>
                 <if condition="doc.countryGeoId">
                     <set field="countryCode" from="doc.countryGeoId instanceof List ? doc.countryGeoId.find{it} : doc.countryGeoId"/>
@@ -713,7 +720,7 @@
                     // Add Store Ship From Address
                     if (docType == 'WebhookShipmentStatus' || shipmentId) {
                         payload.put('shipFromAddress', [
-                            storeName: payload.brand,
+                            storeName: doc.storeName,
                             address: doc.originAddress1
                         ])
                     }
