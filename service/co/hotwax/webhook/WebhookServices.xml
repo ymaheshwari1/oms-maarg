@@ -262,8 +262,6 @@
                 <parameter name="orderStatusId"/>
                 <parameter name="orderEntryDate"/>
                 <!-- Common Shipment Info -->
-                <parameter name="trackingCode"/>
-                <parameter name="trackingUrl"/>
                 <parameter name="shipmentMethodDesc"/>
                 <parameter name="shipmentMethodTypeId"/>
                 <parameter name="shipmentStatusId"/>
@@ -497,8 +495,8 @@
                                 status: doc.eventStatusId,
                                 userId: doc.eventUserLoginId ?: ec.user.userId ?: 'system',
                                 shippingMethod: shippingMethod,
-                                trackingCode: doc.trackingCode,
-                                trackingUrl: doc.trackingUrl,
+                                trackingCode: doc.routeSegments[0]?.trackingCode,
+                                trackingUrl: doc.routeSegments[0]?.trackingUrl,
                                 eventDate: ec.l10n.parseTimestamp((eventDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                             ]"/>
                             
