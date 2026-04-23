@@ -258,11 +258,15 @@
                 <parameter name="orderTypeId"/>
                 <parameter name="grandTotal"/>
                 <parameter name="productName"/>
+                <parameter name="orderHeaderStatusId"/>
+                <parameter name="orderStatusId"/>
+                <parameter name="orderEntryDate"/>
                 <!-- Common Shipment Info -->
                 <parameter name="trackingCode"/>
                 <parameter name="trackingUrl"/>
                 <parameter name="shipmentMethodDesc"/>
                 <parameter name="shipmentMethodTypeId"/>
+                <parameter name="shipmentStatusId"/>
                 <!-- Events -->
                 <parameter name="eventDate"/>
                 <parameter name="eventStatusId"/>
@@ -274,6 +278,9 @@
                 <parameter name="itemStatusId"/>
                 <parameter name="eventShipmentStatusId"/>
                 <parameter name="shipmentId"/>
+                <parameter name="eventStatusUserLogin"/>
+                <parameter name="statusUserLogin"/>
+                <parameter name="createdBy"/>
                 <!-- Facilities & Locations -->
                 <parameter name="originFacilityId"/>
                 <parameter name="facilityName"/>
@@ -281,11 +288,16 @@
                 <parameter name="storeName"/>
                 <parameter name="currencyUom"/>
                 <parameter name="salesChannelDesc"/>
+                <parameter name="countryGeoId"/>
+                <parameter name="defaultLocaleString"/>
                 <!-- Item Res -->
                 <parameter name="productId"/>
                 <parameter name="productIdInternal"/>
                 <parameter name="sku"/>
                 <parameter name="upc"/>
+                <parameter name="itemShipGroupSeqId"/>
+                <parameter name="rejectionReasonId"/>
+                <parameter name="varianceReasonEnumId"/>
                 <!-- Collections -->
                 <parameter name="shipGroups" type="List"><parameter name="shipGroup" type="Map"/></parameter>
                 <parameter name="items" type="List"><parameter name="item" type="Map"/></parameter>
@@ -296,6 +308,7 @@
                 <parameter name="adjustments" type="List"><parameter name="adjustment" type="Map"/></parameter>
                 <parameter name="identifications" type="List"><parameter name="identification" type="Map"/></parameter>
                 <parameter name="itemRes" type="List"><parameter name="resource" type="Map"/></parameter>
+                <parameter name="routeSegments" type="List"><parameter name="routeSegment" type="Map"/></parameter>
             </parameter>
             <parameter name="feedStamp" type="Timestamp"/>
         </in-parameters>
@@ -791,5 +804,5 @@
 
             </if>
         </actions>
-    </service>    
+    </service>
 </services>
