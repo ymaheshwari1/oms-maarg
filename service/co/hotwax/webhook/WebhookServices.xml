@@ -97,7 +97,7 @@
                     <service-call name="create#moqui.service.message.SystemMessage" out-map="createSmsgOut"
                                   transaction="force-new"
                                   in-map="[systemMessageTypeId: 'WebhookNotification',
-                                           messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced',
+                                           messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced', orderId: orderId,
                                            docControl: (orderId ?: shipmentId)]"/>
 
                     <!-- 5. Send synchronously to avoid async race where SystemMessage is still uncommitted -->
