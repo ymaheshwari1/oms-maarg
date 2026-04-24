@@ -684,30 +684,23 @@
                         </if>
                     </iterate>
                 </if>
-                
+
                 <set field="grandTotal" from="orderShipment?.grandTotal ?: doc.grandTotal ?: 0" type="BigDecimal"/>
                 <set field="orderPrice" from="grandTotal - shippingCost" type="BigDecimal"/>
-                <set field="countryCode" from="null"/>
-                <if condition="doc.countryGeoId">
-                    <set field="countryCode" from="doc.countryGeoId instanceof List ? doc.countryGeoId.find{it} : doc.countryGeoId"/>
-                </if>
-                <if condition="!countryCode &amp;&amp; shipGroup?.countryGeoId">
-                    <set field="countryCode" from="shipGroup.countryGeoId instanceof List ? shipGroup.countryGeoId.find{it} : shipGroup.countryGeoId"/>
-                </if>
-                <if condition="!countryCode">
-                    <set field="defaultLocaleString" from="orderShipment?.defaultLocaleString ?: doc.defaultLocaleString"/>
-                    <if condition="defaultLocaleString">
-                        <set field="countryCode" from="defaultLocaleString.substring(defaultLocaleString.length()-2)"/>
-                    </if>
-                </if>
-                
+                <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderHeader" value-field="orderHeader">
+                    <field-map field-name="orderId"/>
+                </entity-find-one>
+                <entity-find entity-name="co.hotwax.shopify.ShopifyShop" list="shopifyShops">
+                    <econdition field-name="productStoreId" from="orderHeader.productStoreId"/>
+                </entity-find>
+
                 <!-- Shared Fields Merge -->
                 <script><![CDATA[
                     payload.putAll([
                         facilityId: shipGroup?.facilityId ?: doc.originFacilityId,
                         facilityName: shipGroup?.facilityName ?: doc.facilityName,
                         brand: orderShipment?.storeName ?: doc.storeName,
-                        country: countryCode,
+                        country: shopifyShops ? shopifyShops[0].countryCode : 'US',
                         channel: orderShipment?.salesChannelDesc ?: doc.salesChannelDesc,
                         paymentType: paymentPref?.paymentMethodDesc,
                         billTo: billContact?.billToName ?: billToNameFallback,
