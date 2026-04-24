@@ -307,7 +307,7 @@
                 <parameter name="identifications" type="List"><parameter name="identification" type="Map"/></parameter>
                 <parameter name="itemRes" type="List"><parameter name="resource" type="Map"/></parameter>
                 <parameter name="routeSegments" type="List"><parameter name="routeSegment" type="Map"/></parameter>
-                <parameter name="facilityAddress" type="Map"/>
+                <parameter name="facilityAddress" type="List"/>
             </parameter>
             <parameter name="feedStamp" type="Timestamp"/>
         </in-parameters>
