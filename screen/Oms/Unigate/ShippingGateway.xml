@@ -99,6 +99,8 @@
                                         <field name="shippingGatewayAuthId"><default-field title="Gateway Auth Id"><text-line/></default-field></field>
                                         <field name="description"><default-field title="Description"><text-line/></default-field></field>
                                         <field name="baseUrl"><default-field title="Base URL"><text-line/></default-field></field>
+                                        <field name="username"><default-field title="Username"><text-line/></default-field></field>
+                                        <field name="password"><default-field title="Password"><text-line/></default-field></field>
                                         <field name="publicKey"><default-field title="Public Key"><text-line/></default-field></field>
                                         <field name="authHeaderName"><default-field title="Auth Header Name"><text-line default-value="Authorization"/></default-field></field>
                                         <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
