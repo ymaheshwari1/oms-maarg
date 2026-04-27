@@ -68,7 +68,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path:'rest/s1/unigate/tenants']" out-map="context"/>
+                          in-map="[path:'tenants']" out-map="context"/>
             <set field="tenantList" from="response"/>
         </actions>
     </service>
@@ -81,7 +81,7 @@
         <actions>
             <set field="requestBody" from="[organizationName:organizationName, partyId:partyId]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path:'rest/s1/unigate/tenants', method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path:'tenants', method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -95,7 +95,7 @@
         <actions>
             <set field="requestBody" from="[userLoginId:userLoginId]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path:'rest/s1/unigate/loginKey', method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path:'loginKey', method:'POST', body:requestBody]" out-map="context"/>
             <set field="loginKey" from="response?.loginKey"/>
         </actions>
     </service>
@@ -107,7 +107,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/commGatewayAuth']" out-map="context"/>
+                          in-map="[path: 'commGatewayAuth']" out-map="context"/>
             <set field="commAuthList" from="response"/>
         </actions>
     </service>
@@ -126,7 +126,7 @@
         <actions>
             <set field="requestBody" from="[commGatewayAuthId:commGatewayAuthId, commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/commGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'commGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -144,7 +144,7 @@
         <actions>
             <set field="requestBody" from="[commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/commGatewayAuth/' + commGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'commGatewayAuth/' + commGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -154,7 +154,7 @@
         </in-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/commGatewayAuth/' + commGatewayAuthId, method:'DELETE']" out-map="context"/>
+                          in-map="[path: 'commGatewayAuth/' + commGatewayAuthId, method:'DELETE']" out-map="context"/>
         </actions>
     </service>
 
@@ -164,7 +164,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path:'rest/s1/unigate/commGatewayConfig']" out-map="context"/>
+                          in-map="[path:'commGatewayConfig']" out-map="context"/>
             <set field="commConfigList" from="response"/>
         </actions>
     </service>
@@ -176,7 +176,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/shipGatewayAuth']" out-map="context"/>
+                          in-map="[path: 'shipGatewayAuth']" out-map="context"/>
             <set field="shipAuthList" from="response"/>
         </actions>
     </service>
@@ -195,7 +195,7 @@
         <actions>
             <set field="requestBody" from="[shippingGatewayAuthId:shippingGatewayAuthId, shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/shipGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'shipGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -213,7 +213,7 @@
         <actions>
             <set field="requestBody" from="[shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/shipGatewayAuth/' + shippingGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'shipGatewayAuth/' + shippingGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -223,7 +223,7 @@
         </in-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'rest/s1/unigate/shipGatewayAuth/' + shippingGatewayAuthId, method:'DELETE']" out-map="context"/>
+                          in-map="[path: 'shipGatewayAuth/' + shippingGatewayAuthId, method:'DELETE']" out-map="context"/>
         </actions>
     </service>
 
@@ -233,7 +233,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path:'rest/s1/unigate/shipGatewayConfig']" out-map="context"/>
+                          in-map="[path:'shipGatewayConfig']" out-map="context"/>
             <set field="shipGatewayConfigList" from="response"/>
         </actions>
     </service>
