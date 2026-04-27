@@ -123,9 +123,6 @@
             <parameter name="publicKey"/>
             <parameter name="authHeaderName"/>
         </in-parameters>
-        <out-parameters>
-            <parameter name="tenantPartyId"/>
-        </out-parameters>
         <actions>
             <set field="requestBody" from="[commGatewayAuthId:commGatewayAuthId, commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
@@ -144,9 +141,6 @@
             <parameter name="publicKey"/>
             <parameter name="authHeaderName"/>
         </in-parameters>
-        <out-parameters>
-            <parameter name="tenantPartyId"/>
-        </out-parameters>
         <actions>
             <set field="requestBody" from="[commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
