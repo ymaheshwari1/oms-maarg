@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Shipping Gateway" default-menu-index="2">
+
+    <transition name="createCarrierConfig">
+        <service-call name="create#co.hotwax.shipment.shipment.ShippingCarrierConfig"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="updateCarrierConfig">
+        <service-call name="update#co.hotwax.shipment.shipment.ShippingCarrierConfig"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="deleteCarrierConfig">
+        <service-call name="delete#co.hotwax.shipment.shipment.ShippingCarrierConfig"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="createShipAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.create#ShippingGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="updateShipAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.update#ShippingGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="deleteShipAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.delete#ShippingGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="createBillingConfig">
+        <service-call name="create#co.hotwax.shipment.shipment.ShippingCarrierBillingConfig"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="updateBillingConfig">
+        <service-call name="update#co.hotwax.shipment.shipment.ShippingCarrierBillingConfig"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="deleteBillingConfig">
+        <service-call name="delete#co.hotwax.shipment.shipment.ShippingCarrierBillingConfig"/>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="unigateConfig">
+            <field-map field-name="systemMessageRemoteId" value="UNIGATE_CONFIG"/>
+        </entity-find-one>
+        <set field="partyId" from="unigateConfig?.internalId"/>
+        <set field="tenantPartyId" from="partyId"/>
+        <set field="unigateKey" from="unigateConfig?.publicKey"/>
+        <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
+        <if condition="partyId">
+            <entity-find entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" list="carrierConfigList">
+                <search-form-inputs default-order-by="carrierPartyId"/>
+            </entity-find>
+            <service-call name="co.hotwax.unigate.UnigateServices.get#ShippingGatewayAuths" out-map="shipAuthOut"/>
+            <set field="shipAuthList" from="shipAuthOut.shipAuthList"/>
+      <entity-find entity-name="co.hotwax.shipment.shipment.ShippingCarrierBillingConfig" list="billingConfigList">
+        <search-form-inputs default-order-by="carrierPartyId"/>
+      </entity-find>
+        </if>
+        <service-call name="co.hotwax.unigate.UnigateServices.get#ShippingGatewayConfigs" out-map="shipConfigOut"/>
+        <set field="shipGatewayConfigList" from="shipConfigOut.shipGatewayConfigList"/>
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="12">
+                <container-box>
+                    <box-header title="Active Tenant"/>
+                    <box-body>
+                        <section name="TenantInfoSection" condition="partyId">
+                            <widgets>
+                                <container-row>
+                                    <row-col md="3"><label text="Tenant ID: " type="strong"/><label text="${partyId}"/></row-col>
+                                    <row-col md="5"><label text="API Key: " type="strong"/><label text="${unigateKey ?: 'Not Set'}"/></row-col>
+                                    <row-col md="4"><label text="Base URL: " type="strong"/><label text="${unigateUrl ?: 'Not Set'}"/></row-col>
+                                </container-row>
+                            </widgets>
+                            <fail-widgets>
+                                <label text="UNIGATE_CONFIG record or Tenant ID (internalId) is missing in SystemMessageRemote. Please configure it to manage gateway settings." style="text-danger"/>
+                            </fail-widgets>
+                        </section>
+                    </box-body>
+                </container-box>
+            </row-col>
+        </container-row>
+
+        <section name="GatewayDetails" condition="partyId">
+            <widgets>
+                <container-row>
+                    <row-col md="12">
+                        <container-box>
+                            <box-header title="Shipping Gateway Auths"/>
+                            <box-toolbar>
+                                <container-dialog id="AddShipAuthDialog" button-text="Add Ship Auth">
+                                    <form-single name="CreateShipAuth" transition="createShipAuth">
+                                        <field name="shippingGatewayConfigId"><default-field title="Config">
+                                            <drop-down><list-options list="shipGatewayConfigList" key="${shippingGatewayConfigId}" text="${description}"/></drop-down>
+                                        </default-field></field>
+                                        <field name="shippingGatewayAuthId"><default-field title="Gateway Auth Id"><text-line/></default-field></field>
+                                        <field name="description"><default-field title="Description"><text-line/></default-field></field>
+                                        <field name="baseUrl"><default-field title="Base URL"><text-line/></default-field></field>
+                                        <field name="publicKey"><default-field title="Public Key"><text-line/></default-field></field>
+                                        <field name="authHeaderName"><default-field title="Auth Header Name"><text-line default-value="Authorization"/></default-field></field>
+                                        <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
+                                    </form-single>
+                                </container-dialog>
+                            </box-toolbar>
+                            <box-body>
+                                <form-list name="ShipAuthList" list="shipAuthList" skip-form="true">
+                                    <field name="shippingGatewayAuthId"><default-field title="Auth ID"><display/></default-field></field>
+                                    <field name="shippingGatewayConfigId"><default-field title="Config"><display/></default-field></field>
+                                    <field name="baseUrl"><default-field title="Base URL"><display/></default-field></field>
+                                    <field name="publicKey"><default-field title="Key"><display/></default-field></field>
+                                    <field name="username"><default-field title="Username"><display/></default-field></field>
+                                    <field name="password"><default-field title="Password"><display/></default-field></field>
+                                    <field name="edit"><default-field title="">
+                                        <container-dialog id="UpdateShipAuthDialog" button-text="Edit">
+                                            <form-single name="UpdateShipAuth" transition="updateShipAuth" map="shipAuthList_entry">
+                                                <field name="shippingGatewayAuthId"><default-field title="Auth ID"><display/></default-field></field>
+                                                <field name="shippingGatewayConfigId"><default-field title="Config">
+                                                    <drop-down><list-options list="shipGatewayConfigList" key="${shippingGatewayConfigId}" text="${description}"/></drop-down>
+                                                </default-field></field>
+                                                <field name="description"><default-field title="Description"><text-line/></default-field></field>
+                                                <field name="baseUrl"><default-field title="Base URL"><text-line/></default-field></field>
+                                                <field name="username"><default-field title="Username"><text-line/></default-field></field>
+                                                <field name="password"><default-field title="Password"><text-line/></default-field></field>
+                                                <field name="publicKey"><default-field title="Public Key"><text-line/></default-field></field>
+                                                <field name="authHeaderName"><default-field title="Auth Header Name"><text-line/></default-field></field>
+                                                <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                            </form-single>
+                                        </container-dialog>
+                                    </default-field></field>
+                                    <field name="delete"><default-field title="">
+                                        <link url="deleteShipAuth" text="Delete" confirmation="Are you sure you want to delete this auth?" parameter-map="[shippingGatewayAuthId:shippingGatewayAuthId]"/>
+                                    </default-field></field>
+                                </form-list>
+                            </box-body>
+                        </container-box>
+
+                        <container-box>
+                            <box-header title="Shipping Carrier Configurations"/>
+                            <box-toolbar>
+                                <container-dialog id="AddCarrierConfigDialog" button-text="Add Carrier Config">
+                                    <form-single name="CreateCarrierConfig" transition="createCarrierConfig">
+                                        <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" include="nonpk"/>
+                                        <field name="submitButton"><default-field title="Create"><submit/></default-field></field>
+                                    </form-single>
+                                </container-dialog>
+                            </box-toolbar>
+                            <box-body>
+                                <form-list name="CarrierConfigList" list="carrierConfigList" skip-form="true" header-dialog="true" show-page-size="true">
+                                    <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" field-type="display"/>
+                                    <field name="edit"><default-field title="">
+                                        <container-dialog id="UpdateCarrierConfigDialog" button-text="Edit">
+                                            <form-single name="UpdateCarrierConfig" transition="updateCarrierConfig" map="carrierConfigList_entry">
+                                                <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" include="nonpk"/><field name="id"><default-field><hidden/></default-field></field>
+                                                <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                            </form-single>
+                                        </container-dialog>
+                                    </default-field></field>
+                                    <field name="delete"><default-field title="">
+                                        <link url="deleteCarrierConfig" text="Delete" confirmation="Are you sure you want to delete this config?" parameter-map="[id:id]"/>
+                                    </default-field></field>
+                                </form-list>
+                            </box-body>
+                        </container-box>
+
+                        <container-box>
+                            <box-header title="Shipping Carrier Billing Configurations"/>
+                            <box-toolbar>
+                                <container-dialog id="AddBillingConfigDialog" button-text="Add Billing Config">
+                                    <form-single name="CreateBillingConfig" transition="createBillingConfig">
+                                        <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierBillingConfig" include="nonpk"/>
+                                        <field name="submitButton"><default-field title="Create"><submit/></default-field></field>
+                                    </form-single>
+                                </container-dialog>
+                            </box-toolbar>
+                            <box-body>
+                                <form-list name="BillingConfigList" list="billingConfigList" skip-form="true" header-dialog="true" show-page-size="true">
+                                    <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierBillingConfig" field-type="display"/>
+                                    <field name="edit"><default-field title="">
+                                        <container-dialog id="UpdateBillingConfigDialog" button-text="Edit">
+                                            <form-single name="UpdateBillingConfig" transition="updateBillingConfig" map="billingConfigList_entry">
+                                                <auto-fields-entity entity-name="co.hotwax.shipment.shipment.ShippingCarrierBillingConfig" include="nonpk"/><field name="id"><default-field><hidden/></default-field></field>
+                                                <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                            </form-single>
+                                        </container-dialog>
+                                    </default-field></field>
+                                    <field name="delete"><default-field title="">
+                                        <link url="deleteBillingConfig" text="Delete" confirmation="Are you sure you want to delete this config?" parameter-map="[id:id]"/>
+                                    </default-field></field>
+                                </form-list>
+                            </box-body>
+                        </container-box>
+                    </row-col>
+                </container-row>
+            </widgets>
+        </section>
+    </widgets>
+</screen>

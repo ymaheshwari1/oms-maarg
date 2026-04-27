@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Communication Gateway" default-menu-index="1">
+
+    <transition name="createCommAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.create#CommGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="updateCommAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.update#CommGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="deleteCommAuth">
+        <service-call name="co.hotwax.unigate.UnigateServices.delete#CommGatewayAuth"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="updateEmailSetting">
+        <service-call name="update#org.apache.ofbiz.product.store.ProductStoreEmailSetting"/>
+        <default-response url=".">
+            <parameter name="productStoreId"/>
+        </default-response>
+    </transition>
+    <transition name="createEmailSetting">
+        <service-call name="create#org.apache.ofbiz.product.store.ProductStoreEmailSetting"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="deleteEmailSetting">
+        <service-call name="delete#org.apache.ofbiz.product.store.ProductStoreEmailSetting"/>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="unigateConfig">
+            <field-map field-name="systemMessageRemoteId" value="UNIGATE_CONFIG"/>
+        </entity-find-one>
+        <set field="partyId" from="unigateConfig?.internalId"/>
+        <set field="tenantPartyId" from="partyId"/>
+        <set field="unigateKey" from="unigateConfig?.publicKey"/>
+        <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
+        <if condition="partyId">
+            <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths" out-map="commAuthOut"/>
+            <set field="commAuthList" from="commAuthOut.commAuthList"/>
+        </if>
+        <entity-find entity-name="org.apache.ofbiz.product.store.ProductStore" list="productStoreList"/>
+        <set field="productStoreId" from="productStoreId ?: productStoreList?.getAt(0)?.productStoreId"/>
+        <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayConfigs" out-map="commConfigOut"/>
+        <set field="commConfigList" from="commConfigOut.commConfigList"/>
+        <entity-find entity-name="moqui.service.message.SystemMessageRemote" list="systemMessageRemoteList"/>
+        <entity-find entity-name="moqui.basic.Enumeration" list="emailTypeList">
+            <search-form-inputs input-fields-map="[enumTypeId:'PRDS_EMAIL']" default-order-by="description"/>
+        </entity-find>
+        <entity-find entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" list="emailSettingList"><search-form-inputs/></entity-find>
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="12">
+                <container-box>
+                    <box-header title="Active Tenant"/>
+                    <box-body>
+                        <section name="TenantInfoSection" condition="partyId">
+                            <widgets>
+                                <container-row>
+                                    <row-col md="3"><label text="Tenant ID: " type="strong"/><label text="${partyId}"/></row-col>
+                                    <row-col md="5"><label text="API Key: " type="strong"/><label text="${unigateKey ?: 'Not Set'}"/></row-col>
+                                    <row-col md="4"><label text="Base URL: " type="strong"/><label text="${unigateUrl ?: 'Not Set'}"/></row-col>
+                                </container-row>
+                            </widgets>
+                            <fail-widgets>
+                                <label text="UNIGATE_CONFIG record or Tenant ID (internalId) is missing in SystemMessageRemote. Please configure it to manage gateway settings." style="text-danger"/>
+                            </fail-widgets>
+                        </section>
+                    </box-body>
+                </container-box>
+            </row-col>
+        </container-row>
+
+        <section name="GatewayDetails" condition="partyId">
+            <widgets>
+                <container-row>
+                    <row-col md="12">
+                        <container-box>
+                            <box-header title="Communication Gateway Auths"/>
+                            <box-toolbar>
+                                <container-dialog id="AddCommAuthDialog" button-text="Add Comm Auth">
+                                    <form-single name="CreateCommAuth" transition="createCommAuth">
+                                        <field name="commGatewayConfigId"><default-field title="Config">
+                                            <drop-down><list-options list="commConfigList" key="${commGatewayConfigId}" text="${description}"/></drop-down>
+                                        </default-field></field>
+                                        <field name="commGatewayAuthId"><default-field title="Gateway Auth Id"><text-line/></default-field></field>
+                                        <field name="description"><default-field title="Description"><text-line/></default-field></field>
+                                        <field name="baseUrl"><default-field title="Base URL"><text-line/></default-field></field>
+                                        <field name="username"><default-field title="Username"><text-line/></default-field></field>
+                                        <field name="password"><default-field title="Password"><text-line/></default-field></field>
+                                        <field name="publicKey"><default-field title="Public Key"><text-line/></default-field></field>
+                                        <field name="authHeaderName"><default-field title="Auth Header Name"><text-line default-value="Authorization"/></default-field></field>
+                                        <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
+                                    </form-single>
+                                </container-dialog>
+                            </box-toolbar>
+                            <box-body>
+                                <form-list name="CommAuthList" list="commAuthList" skip-form="true">
+                                    <field name="commGatewayAuthId"><default-field title="Auth ID"><display/></default-field></field>
+                                    <field name="commGatewayConfigId"><default-field title="Config"><display/></default-field></field>
+                                    <field name="baseUrl"><default-field title="Base URL"><display/></default-field></field>
+                                    <field name="publicKey"><default-field title="Key"><display/></default-field></field>
+                                    <field name="username"><default-field title="Username"><display/></default-field></field>
+                                    <field name="password"><default-field title="Password"><display/></default-field></field>
+                                    <field name="edit"><default-field title="">
+                                        <container-dialog id="UpdateCommAuthDialog" button-text="Edit">
+                                            <form-single name="UpdateCommAuth" transition="updateCommAuth" map="commAuthList_entry">
+                                                <field name="commGatewayAuthId"><default-field title="Auth ID"><display/></default-field></field>
+                                                <field name="commGatewayConfigId"><default-field title="Config">
+                                                    <drop-down><list-options list="commConfigList" key="${commGatewayConfigId}" text="${description}"/></drop-down>
+                                                </default-field></field>
+                                                <field name="description"><default-field title="Description"><text-line/></default-field></field>
+                                                <field name="baseUrl"><default-field title="Base URL"><text-line/></default-field></field>
+                                                <field name="username"><default-field title="Username"><text-line/></default-field></field>
+                                                <field name="password"><default-field title="Password"><text-line/></default-field></field>
+                                                <field name="publicKey"><default-field title="Public Key"><text-line/></default-field></field>
+                                                <field name="authHeaderName"><default-field title="Auth Header Name"><text-line/></default-field></field>
+                                                <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                            </form-single>
+                                        </container-dialog>
+                                    </default-field></field>
+                                    <field name="delete"><default-field title="">
+                                        <link url="deleteCommAuth" text="Delete" confirmation="Are you sure you want to delete this auth?" parameter-map="[commGatewayAuthId:commGatewayAuthId]"/>
+                                    </default-field></field>
+                                </form-list>
+                            </box-body>
+                        </container-box>
+
+                        <container-box>
+                            <box-header title="Product Store Email Settings"/>
+                            <box-toolbar>
+                                <container-dialog id="AddEmailSettingDialog" button-text="Add Email Setting">
+                                    <form-single name="CreateEmailSetting" transition="createEmailSetting">
+                                        <field name="productStoreId"><default-field title="Store">
+                                            <drop-down><list-options list="productStoreList" key="${productStoreId}" text="${storeName}"/></drop-down>
+                                        </default-field></field>
+                                        <field name="emailType"><default-field title="Email Type">
+                                            <drop-down><list-options list="emailTypeList" key="${enumId}" text="${description}"/></drop-down>
+                                        </default-field></field>
+                                        <field name="subject"><default-field title="Subject"><text-line/></default-field></field>
+                                        <field name="systemMessageRemoteId"><default-field title="Gateway Remote">
+                                            <drop-down allow-empty="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down>
+                                        </default-field></field>
+                                        <field name="gatewayAuthId"><default-field title="Gateway Auth ID"><text-line/></default-field></field>
+                                        <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
+                                    </form-single>
+                                </container-dialog>
+                            </box-toolbar>
+                            <box-body>
+                                <form-list name="EmailSettingList" list="emailSettingList" transition="updateEmailSetting" header-dialog="true" show-page-size="true">
+                                    <field name="find"><header-field title="Search"><submit/></header-field></field>
+                                    <field name="productStoreId">
+                                        <header-field><drop-down allow-multiple="true"><list-options list="productStoreList" key="${productStoreId}" text="${storeName}"/></drop-down></header-field>
+                                        <default-field title="Store"><display/></default-field>
+                                    </field>
+                                    <field name="emailType">
+                                        <header-field><text-find/></header-field>
+                                        <default-field title="Email Type"><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+                                    </field>
+                                    <field name="subject"><header-field><text-find/></header-field><default-field><text-line/></default-field></field>
+                                    <field name="systemMessageRemoteId">
+                                        <header-field><drop-down allow-multiple="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down></header-field>
+                                        <default-field title="Gateway Remote">
+                                            <drop-down allow-empty="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down>
+                                        </default-field>
+                                    </field>
+                                    <field name="gatewayAuthId"><default-field title="Gateway Auth ID"><text-line/></default-field></field>
+                                    <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                    <field name="delete"><default-field title="">
+                                        <link url="deleteEmailSetting" text="Delete" confirmation="Are you sure you want to delete this setting?" parameter-map="[productStoreId:productStoreId, emailType:emailType]"/>
+                                    </default-field></field>
+                                </form-list>
+                            </box-body>
+                        </container-box>
+                    </row-col>
+                </container-row>
+            </widgets>
+        </section>
+    </widgets>
+</screen>
