@@ -90,7 +90,7 @@ under the License.
 
             <script>
                 // Using master-detail relationship to fetch all order details
-                order = ec.entity.find("org.apache.ofbiz.order.order.OrderHeader").condition("orderId", orderId).oneMaster("default")
+                order = ec.entity.find("org.apache.ofbiz.order.order.OrderHeader").condition("orderId", orderId).oneMaster("notification")
             </script>
 
             <if condition="additionalFields">
@@ -241,7 +241,7 @@ under the License.
             <entity-find-one entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" value-field="productStoreEmailSetting">
                 <field-map field-name="productStoreId" from="order.productStoreId"/>
                 <field-map field-name="emailType" from="emailType"/>
-                <select-field field-name="emailType,subject,systemMessageRemoteId,commGatewayAuthId"/>
+                <select-field field-name="emailType,subject,systemMessageRemoteId,gatewayAuthId"/>
             </entity-find-one>
             <if condition="!productStoreEmailSetting">
                 <return error="true" message="Product Store Email Setting for ${emailType} not defined, not creating related system message."/>
@@ -251,7 +251,7 @@ under the License.
                 'productStoreId': order.productStoreId,
                 'emailType': emailType,
                 'emailAddress': emailAddress,
-                'commGatewayAuthId': productStoreEmailSetting.commGatewayAuthId,
+                'commGatewayAuthId': productStoreEmailSetting.gatewayAuthId,
                 'subject': productStoreEmailSetting.subject,
                 'orderId': order.orderId,
                 'orderName': order.orderName,
@@ -270,16 +270,6 @@ under the License.
                 'adjustments': order.adjustments,
                 'items': itemList
             ]"/>
-            <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
-                          in-map="[communicationEventTypeId:'SYS_MSG_EMAIL_COMM',
-                                  content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(orderDetail),
-                                  datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
-                                  subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
-                                  reasonEnumId:reasonEnumId, statusId:'COM_ENTERED']"
-                          out-map="parentCommEvent"/>
-            
-            <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder"
-                          in-map="[orderId:order.orderId, communicationEventId:parentCommEvent.communicationEventId]"/>
 
             <service-call name="co.hotwax.orderledger.order.email.EmailServices.send#EmailRequest"
                           in-map="[payload: orderDetail, systemMessageRemoteId: productStoreEmailSetting.systemMessageRemoteId]" out-map="result"/>
@@ -288,17 +278,19 @@ under the License.
             <set field="gatewayResponse" from="unigateResponse?.response"/>
             <set field="statusCode" from="gatewayResponse?.statusCode"/>
 
-            <set field="childEventStatusId" from="(statusCode &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
+            <set field="eventStatusId" from="(statusCode &amp;&amp; statusCode &gt; 200 &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
             <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
-                          in-map="[communicationEventTypeId:'SYS_MSG_EMAIL_COMM',
-                                  parentCommEventId: parentCommEvent.communicationEventId,
+                          in-map="[communicationEventTypeId:'EMAIL_COMMUNICATION',
                                   content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(result.response),
                                   datetimeStarted: ec.user.nowTimestamp, partyIdTo: partyIdTo, toString: emailAddress,
                                   subject: productStoreEmailSetting.subject, fromAddress: productStoreEmailSetting.fromAddress,
-                                  reasonEnumId:reasonEnumId, statusId: childEventStatusId]"
-                          out-map="childCommEvent"/>
+                                  reasonEnumId:reasonEnumId, statusId: eventStatusId]"
+                          out-map="commEvent"/>
 
-            <if condition="statusCode &amp;&amp; statusCode &gt;= 300">
+            <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder"
+                          in-map="[orderId:order.orderId, communicationEventId:commEvent.communicationEventId]" async="true"/>
+
+            <if condition="statusCode &amp;&amp; statusCode &lt; 200 &amp;&amp; statusCode &gt;= 300">
                 <return message="Failed to send email of type ${emailType} for order ${order.orderId}: ${gatewayResponse}"/>
             </if>
         </actions>
