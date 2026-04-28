@@ -1,4 +1,17 @@
 <secas xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-eca-3.xsd">
+    <seca id="PopulateInventoryItemDetailLastTotals" service="co.hotwax.oms.product.InventoryServices.create#InventoryItemDetail" when="pre-service">
+        <actions>
+<!--            <entity-find-one entity-name="co.hotwax.oms.product.inventory.InventoryItemDetailSummary" value-field="inventoryItemDetailSummary">-->
+<!--                <field-map field-name="inventoryItemId" from="inventoryItemId"/>-->
+<!--            </entity-find-one>-->
+<!--            <if condition="parameters.lastQuantityOnHand == null">-->
+<!--                <set field="parameters.lastQuantityOnHand" from="inventoryItemDetailSummary?.quantityOnHandTotal"/>-->
+<!--            </if>-->
+<!--            <if condition="parameters.lastAvailableToPromise == null">-->
+<!--                <set field="parameters.lastAvailableToPromise" from="inventoryItemDetailSummary?.availableToPromiseTotal"/>-->
+<!--            </if>-->
+        </actions>
+    </seca>
     <!-- FIXME: This should be done using the DataFeed flow-->
     <seca id="ProcessOrderItemAllocation" service="co.hotwax.oms.impl.OrderReservationServices.process#OrderItemAllocation" when="tx-commit">
         <condition><expression>allocatedShipGroupSeqId</expression></condition>
