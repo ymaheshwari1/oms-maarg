@@ -19,8 +19,8 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="co.hotwax.oms.product.inventory.InventoryItemDetailSummary" value-field="inventoryItemDetailSummary">
                 <field-map field-name="inventoryItemId" from="inventoryItemId"/>
             </entity-find-one>
-            <set field="entityValue.lastQuantityOnHand" from="inventoryItemDetailSummary?.quantityOnHandTotal ?: quantityOnHandDiff"/>
-            <set field="entityValue.lastAvailableToPromise" from="inventoryItemDetailSummary?.availableToPromiseTotal ?: availableToPromiseDiff"/>
+            <set field="entityValue.lastQuantityOnHand" from="inventoryItemDetailSummary?.quantityOnHandTotal != null ? inventoryItemDetailSummary.quantityOnHandTotal : quantityOnHandDiff"/>
+            <set field="entityValue.lastAvailableToPromise" from="inventoryItemDetailSummary?.availableToPromiseTotal != null ? inventoryItemDetailSummary.availableToPromiseTotal : availableToPromiseDiff"/>
         </actions>
     </eeca>
 </eecas>
