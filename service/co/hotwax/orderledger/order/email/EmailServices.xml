@@ -278,7 +278,7 @@ under the License.
             <set field="gatewayResponse" from="unigateResponse?.response"/>
             <set field="statusCode" from="gatewayResponse?.statusCode"/>
 
-            <set field="eventStatusId" from="(statusCode &amp;&amp; statusCode &gt; 200 &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
+            <set field="eventStatusId" from="(statusCode &amp;&amp; statusCode &gt;= 200 &amp;&amp; statusCode &lt; 300) ? 'COM_COMPLETE' : 'COM_BOUNCED'"/>
             <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent"
                           in-map="[communicationEventTypeId:'EMAIL_COMMUNICATION',
                                   content: org.moqui.impl.context.ContextJavaUtil.jacksonMapper.writeValueAsString(result.response),
