@@ -128,18 +128,6 @@ under the License.
             <service-call name="create#org.apache.ofbiz.order.order.OrderHeaderNote" in-map="[orderId:orderId, noteId:noteDataResponse.noteId]"/>
             <!-- TODO: internalNote:Y or N ; Also we can save the comment/reason as a part of the note-->
 
-            <!-- Call get#OrderItemSalesTaxTotal inline and get the sales tax total of the order item -->
-            <service-call name="co.hotwax.oms.order.OrderServices.get#OrderItemSalesTaxTotal" in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId]" out-map="orderItemSalesTaxTotalResponse"/>
-            <set field="itemTaxTotal" from="orderItemSalesTaxTotalResponse.itemTaxTotal" type="BigDecimal" />
-
-            <!-- If taxTotal is greater than zero, then call create#OrderAdjustment inline to create negative sales tax amount for the order item-->
-            <if condition="itemTaxTotal.compareTo(BigDecimal.ZERO) &gt; 0">
-                <service-call name="create#org.apache.ofbiz.order.order.OrderAdjustment" in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId,
-                        shipGroupSeqId:'_NA_', orderAdjustmentTypeId:'SALES_TAX', description:'Tax adjustment on item cancellation',
-                        amount:-itemTaxTotal]"/>
-                <!-- TODO: Discuss the setting of shipGroupSeqId=_NA_ -->
-            </if>
-
             <!-- Call create#CommunicationEvent to register the event -->
             <service-call name="create#org.apache.ofbiz.party.communication.CommunicationEvent" in-map="[orderId:orderId, communicationEventTypeId:'API_COMMUNICATION',
                     communicationEventTypeEnumId:'API_CANCEL_ORDER_ITEM', content:'Shopify Order Item Cancel: OrderId:' + orderId + ', itemSeqId: ' + orderItem.orderItemSeqId + ', Qty [' + BigDecimal.ONE.intValue() + ']', datetimeStarted:ec.user.nowTimestamp]"/>
