@@ -253,22 +253,24 @@ under the License.
                 'emailAddress': emailAddress,
                 'commGatewayAuthId': productStoreEmailSetting.gatewayAuthId,
                 'subject': productStoreEmailSetting.subject,
-                'orderId': order.orderId,
-                'orderName': order.orderName,
-                'orderDate': order.orderDate,
-                'grandTotal': order.grandTotal,
-                'orderStatusUrl': order.orderStatusUrl,
-                'orderUpdateUrl': order.orderUpdateUrl,
-                'brandName': order.brandName,
-                'sandbox': order.sandbox,
-                'firstName': order.firstName,
-                'lastName': order.lastName,
-                'facilityAddress': order.facilityAddress,
-                'additionalFields': order.additionalFields,
-                'shippingAddress': order.shippingAddress,
-                'billingAddress': order.billingAddress,
-                'adjustments': order.adjustments,
-                'items': itemList
+                'messageData': [
+                    'orderId': order.orderId,
+                    'orderName': order.orderName,
+                    'orderDate': order.orderDate,
+                    'grandTotal': order.grandTotal,
+                    'orderStatusUrl': order.orderStatusUrl,
+                    'orderUpdateUrl': order.orderUpdateUrl,
+                    'brandName': order.brandName,
+                    'sandbox': order.sandbox,
+                    'firstName': order.firstName,
+                    'lastName': order.lastName,
+                    'items': itemList,
+                    'adjustments': order.adjustments,
+                    'facilityAddress': order.facilityAddress,
+                    'shippingAddress': order.shippingAddress,
+                    'billingAddress': order.billingAddress,
+                    'additionalFields': order.additionalFields
+                ]
             ]"/>
 
             <service-call name="co.hotwax.orderledger.order.email.EmailServices.send#EmailRequest"
