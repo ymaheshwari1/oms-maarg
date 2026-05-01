@@ -737,4 +737,68 @@ under the License.
             <return message="Bulk BOPIS Order Cancelled Email To Store Service Ran Successfully At ${nowDate}."/>
         </actions>
     </service>
+
+    <service verb="create" noun="EmailEvent">
+        <in-parameters>
+            <parameter name="productStoreId" required="true"/>
+            <parameter name="emailType" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" value-field="productStoreEmailSetting">
+                <field-map field-name="productStoreId" from="productStoreId"/>
+                <field-map field-name="emailType" from="emailType"/>
+            </entity-find-one>
+            <if condition="!productStoreEmailSetting">
+                <return error="true" message="No email setting found for product store ${productStoreId} and email type ${emailType}"/>
+            </if>
+
+            <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="systemMessageRemote">
+                <field-map field-name="systemMessageRemoteId" from="productStoreEmailSetting.systemMessageRemoteId"/>
+            </entity-find-one>
+            <if condition="!systemMessageRemote">
+                <return error="true" message="Could not find SystemMessageRemote with ID ${systemMessageRemoteId}"/>
+            </if>
+
+            <set field="payload" from="[:]"/>
+            <set field="payload.emailType" from="emailType"/>
+            <set field="payload.subject" from="productStoreEmailSetting.subject"/>
+            <set field="payload.commGatewayAuthId" from="productStoreEmailSetting.gatewayAuthId"/>
+            <set field="payload.emailAddress" from="productStoreEmailSetting.fromAddress"/>
+
+            <script><![CDATA[
+                import org.moqui.util.RestClient
+
+                RestClient restClient = ec.service.rest()
+                restClient.timeoutRetry(true)
+                restClient.retry(2, 4)
+                restClient.method('POST')
+
+                // Construct full URL
+                String url = systemMessageRemote.sendUrl
+                if (!url.endsWith("/")) {
+                    url += "/"
+                }
+                url += 'communication/event'
+
+                restClient.uri(url)
+                restClient.addHeader("Content-Type", "application/json")
+                restClient.addHeader("api_key", systemMessageRemote.publicKey)
+                restClient.addHeader("tenant_Id", systemMessageRemote.internalId)
+                restClient.jsonObject(payload)
+
+                // Execute API call
+                try {
+                    RestClient.RestResponse restResponse = restClient.call()
+                    int statusCode = restResponse.getStatusCode()
+                    response = restResponse.jsonObject()
+
+                    if (statusCode < 200 || statusCode >= 300) {
+                        ec.message.addError("Unsuccessful with status code: ${statusCode} and response: ${response}")
+                    }
+                } catch (Exception e) {
+                    ec.logger.error(e.getMessage())
+                }
+                ]]></script>
+        </actions>
+    </service>
 </services>
