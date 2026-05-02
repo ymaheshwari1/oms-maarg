@@ -756,7 +756,7 @@ under the License.
                 <field-map field-name="systemMessageRemoteId" from="productStoreEmailSetting.systemMessageRemoteId"/>
             </entity-find-one>
             <if condition="!systemMessageRemote">
-                <return error="true" message="Could not find SystemMessageRemote with ID ${systemMessageRemoteId}"/>
+                <return error="true" message="Could not find SystemMessageRemote with ID ${productStoreEmailSetting.systemMessageRemoteId}"/>
             </if>
 
             <set field="payload" from="[:]"/>
