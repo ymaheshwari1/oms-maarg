@@ -290,7 +290,7 @@ under the License.
                           out-map="commEvent"/>
 
             <service-call name="create#org.apache.ofbiz.order.order.CommunicationEventOrder"
-                          in-map="[orderId:order.orderId, communicationEventId:commEvent.communicationEventId]" async="true"/>
+                          in-map="[orderId:order.orderId, communicationEventId:commEvent.communicationEventId]"/>
 
             <if condition="statusCode &amp;&amp; statusCode &lt; 200 &amp;&amp; statusCode &gt;= 300">
                 <return message="Failed to send email of type ${emailType} for order ${order.orderId}: ${gatewayResponse}"/>
