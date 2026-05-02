@@ -24,6 +24,14 @@
         <service-call name="create#org.apache.ofbiz.product.store.ProductStoreEmailSetting"/>
         <default-response url="."/>
     </transition>
+    <transition name="createEvent">
+        <service-call name="co.hotwax.orderledger.order.email.EmailServices.create#EmailEvent"/>
+        <default-response url="."/>
+    </transition>
+    <transition name="createRemote">
+        <service-call name="create#moqui.service.message.SystemMessageRemote"/>
+        <default-response url="."/>
+    </transition>
     <transition name="deleteEmailSetting">
         <service-call name="delete#org.apache.ofbiz.product.store.ProductStoreEmailSetting"/>
         <default-response url="."/>
@@ -40,16 +48,16 @@
         <if condition="partyId">
             <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths" out-map="commAuthOut"/>
             <set field="commAuthList" from="commAuthOut.commAuthList"/>
+            <entity-find entity-name="org.apache.ofbiz.product.store.ProductStore" list="productStoreList"/>
+            <set field="productStoreId" from="productStoreId ?: productStoreList?.getAt(0)?.productStoreId"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayConfigs" out-map="commConfigOut"/>
+            <set field="commConfigList" from="commConfigOut.commConfigList"/>
+            <entity-find entity-name="moqui.service.message.SystemMessageRemote" list="systemMessageRemoteList"/>
+            <entity-find entity-name="moqui.basic.Enumeration" list="emailTypeList">
+                <search-form-inputs input-fields-map="[enumTypeId:'PRDS_EMAIL']" default-order-by="description"/>
+            </entity-find>
+            <entity-find entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" list="emailSettingList"><search-form-inputs/></entity-find>
         </if>
-        <entity-find entity-name="org.apache.ofbiz.product.store.ProductStore" list="productStoreList"/>
-        <set field="productStoreId" from="productStoreId ?: productStoreList?.getAt(0)?.productStoreId"/>
-        <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayConfigs" out-map="commConfigOut"/>
-        <set field="commConfigList" from="commConfigOut.commConfigList"/>
-        <entity-find entity-name="moqui.service.message.SystemMessageRemote" list="systemMessageRemoteList"/>
-        <entity-find entity-name="moqui.basic.Enumeration" list="emailTypeList">
-            <search-form-inputs input-fields-map="[enumTypeId:'PRDS_EMAIL']" default-order-by="description"/>
-        </entity-find>
-        <entity-find entity-name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" list="emailSettingList"><search-form-inputs/></entity-find>
     </actions>
 
     <widgets>
@@ -57,6 +65,18 @@
             <row-col md="12">
                 <container-box>
                     <box-header title="Active Tenant"/>
+                    <box-toolbar>
+                        <container-dialog id="setupTenant" button-text="Setup Tenant" title="Setup Unigate Tenant" condition="!unigateConfig">
+                            <form-single name="SetupTenant" transition="createRemote">
+                                <field name="systemMessageRemoteId"><default-field><hidden default-value="UNIGATE_CONFIG"/></default-field></field>
+                                <field name="internalId"><default-field title="Tenant Id"><text-line/></default-field></field>
+                                <field name="description"><default-field title="Description"><text-line/></default-field></field>
+                                <field name="sendUrl"><default-field title="Instance URL"><text-line/></default-field></field>
+                                <field name="publicKey"><default-field title="API Key"><text-line/></default-field></field>
+                                <field name="submitButton"><default-field title="Create"><submit/></default-field></field>
+                            </form-single>
+                        </container-dialog>
+                    </box-toolbar>
                     <box-body>
                         <section name="TenantInfoSection" condition="partyId">
                             <widgets>
@@ -67,7 +87,7 @@
                                 </container-row>
                             </widgets>
                             <fail-widgets>
-                                <label text="UNIGATE_CONFIG record or Tenant ID (internalId) is missing in SystemMessageRemote. Please configure it to manage gateway settings." style="text-danger"/>
+                                <label text="Unigate Tenant is not configured. Please configure it to manage gateway settings." style="text-danger"/>
                             </fail-widgets>
                         </section>
                     </box-body>
@@ -141,11 +161,11 @@
                                         <field name="emailType"><default-field title="Email Type">
                                             <drop-down><list-options list="emailTypeList" key="${enumId}" text="${description}"/></drop-down>
                                         </default-field></field>
+                                        <field name="fromAddress"><default-field title="From Address"><text-line/></default-field></field>
                                         <field name="subject"><default-field title="Subject"><text-line/></default-field></field>
-                                        <field name="systemMessageRemoteId"><default-field title="Gateway Remote">
-                                            <drop-down allow-empty="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down>
+                                        <field name="gatewayAuthId"><default-field title="Gateway Auth ID">
+                                            <drop-down><list-options list="commAuthList" key="${commGatewayAuthId}" text="${commGatewayAuthId}"/></drop-down>
                                         </default-field></field>
-                                        <field name="gatewayAuthId"><default-field title="Gateway Auth ID"><text-line/></default-field></field>
                                         <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
                                     </form-single>
                                 </container-dialog>
@@ -159,21 +179,39 @@
                                     </field>
                                     <field name="emailType">
                                         <header-field><text-find/></header-field>
-                                        <default-field title="Email Type"><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+                                        <default-field title="Email Type"><display/></default-field>
                                     </field>
                                     <field name="subject"><header-field><text-find/></header-field><default-field><text-line/></default-field></field>
-                                    <field name="systemMessageRemoteId">
-                                        <header-field><drop-down allow-multiple="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down></header-field>
-                                        <default-field title="Gateway Remote">
-                                            <drop-down allow-empty="true"><list-options list="systemMessageRemoteList" key="${systemMessageRemoteId}" text="${description ?: systemMessageRemoteId}"/></drop-down>
-                                        </default-field>
+                                    <field name="gatewayAuthId">
+                                        <header-field><text-find/></header-field>
+                                        <default-field title="Gateway Auth Id"><drop-down allow-empty="true"><list-options list="commAuthList" key="${commGatewayAuthId}" text="${commGatewayAuthId}"/></drop-down></default-field>
                                     </field>
-                                    <field name="gatewayAuthId"><default-field title="Gateway Auth ID"><text-line/></default-field></field>
                                     <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
                                     <field name="delete"><default-field title="">
                                         <link url="deleteEmailSetting" text="Delete" confirmation="Are you sure you want to delete this setting?" parameter-map="[productStoreId:productStoreId, emailType:emailType]"/>
                                     </default-field></field>
                                 </form-list>
+                            </box-body>
+                        </container-box>
+                        <container-box>
+                            <box-header title="Create Email Events"/>
+                            <box-body>
+                                <form-single name="CreateEmailEvent" transition="createEvent">
+                                    <field-layout>
+                                        <field-col-row>
+                                            <field-col lg="4"><field-ref name="productStoreId"/></field-col>
+                                            <field-col lg="4"><field-ref name="emailType"/></field-col>
+                                            <field-col lg="4"><field-ref name="submitButton"/></field-col>
+                                        </field-col-row>
+                                    </field-layout>
+                                    <field name="productStoreId"><default-field title="Store">
+                                        <drop-down><list-options list="productStoreList" key="${productStoreId}" text="${storeName}"/></drop-down>
+                                    </default-field></field>
+                                    <field name="emailType"><default-field title="Email Type">
+                                        <drop-down><list-options list="emailSettingList" key="${emailTypeId}" text="${emailTypeId}"/></drop-down>
+                                    </default-field></field>
+                                    <field name="submitButton"><default-field title="Create"><submit/></default-field></field>
+                                </form-single>
                             </box-body>
                         </container-box>
                     </row-col>
