@@ -796,7 +796,7 @@ under the License.
                         ec.message.addError("Unsuccessful with status code: ${statusCode} and response: ${response}")
                     }
                 } catch (Exception e) {
-                    ec.logger.error(e.getMessage())
+                    ec.message.addError("Connection Error: ${e.getMessage()}")
                 }
                 ]]></script>
         </actions>
