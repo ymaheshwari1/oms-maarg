@@ -48,6 +48,16 @@
             <parameter name="keyword">
                 <description>The passed value is searched in orderId and orderName with LIKE operator.</description>
             </parameter>
+            <parameter name="productStoreId">
+                <description>The ID of the product store of the Transfer Order.</description>
+            </parameter>
+            <parameter name="shipmentMethodTypeId">
+                <description>The ID of the shipment method type of the Transfer Order.</description>
+            </parameter>
+            <parameter name="carrierPartyId">
+                <description>The ID of the carrier party of the Transfer Order.</description>
+            </parameter>
+            <parameter name="fieldsToSelect" default-value="orderId"/>
         </in-parameters>
         <out-parameters>
             <parameter name="orders" type="List"/>
@@ -74,7 +84,7 @@
                 </econditions>
                 <econdition field-name="orderFacilityId" from="destinationFacilityId" ignore-if-empty="true"/>
                 <econdition field-name="orderName" operator="like" value="${orderName}%" ignore="!orderName"/>
-                <select-field field-name="orderId,orderName,orderExternalId,orderStatusId,orderStatusDesc"/>
+                <select-field field-name="${fieldsToSelect}"/>
             </entity-find>
         </actions>
     </service>
