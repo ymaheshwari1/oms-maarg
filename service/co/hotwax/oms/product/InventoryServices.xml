@@ -37,9 +37,10 @@ under the License.
             <set field="newEntity.inventoryItemDetailSeqId" from="ec.entityFacade.sequencedIdPrimaryEd(itemDetailED)"/>
             <set field="inventoryItemDetailSeqId" from="newEntity.inventoryItemDetailSeqId"/>
 
-            <entity-find-one entity-name="co.hotwax.oms.product.inventory.InventoryItemDetailSummary" value-field="inventoryItemDetailSummary"/>
-            <set field="newEntity.lastQuantityOnHand" from="inventoryItemDetailSummary?.quantityOnHandTotal" default-value="0"/>
-            <set field="newEntity.lastAvailableToPromise" from="inventoryItemDetailSummary?.availableToPromiseTotal" default-value="0"/>
+            <!-- Commenting this code, as lastAvailableToPromise and lastQuantityOnHandTotal will be populated via eca on InventoryItemDetail -->
+<!--            <entity-find-one entity-name="co.hotwax.oms.product.inventory.InventoryItemDetailSummary" value-field="inventoryItemDetailSummary"/>-->
+<!--            <set field="newEntity.lastQuantityOnHand" from="inventoryItemDetailSummary?.quantityOnHandTotal" default-value="0"/>-->
+<!--            <set field="newEntity.lastAvailableToPromise" from="inventoryItemDetailSummary?.availableToPromiseTotal" default-value="0"/>-->
 
             <if condition="!newEntity.availableToPromiseDiff">
                 <set field="newEntity.availableToPromiseDiff" value="0" type="BigDecimal"/>
