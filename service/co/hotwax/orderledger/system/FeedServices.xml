@@ -212,8 +212,15 @@ under the License.
                                         .call()
 
                                     if (variant?.id) {
-                                        variantIds.add([variant.id, sequenceIndex])
-                                        sequenceIndex++
+                                        // Verify if the variant is already imported in the OMS
+                                        def variantGid = co.hotwax.sob.shopify.ShopifyHelper.resolveShopifyGid(variant.id)
+                                        def shopifyShopProduct = ec.entity.find("co.hotwax.shopify.ShopifyShopProduct")
+                                                .condition([shopId: shopId, shopifyProductId: variantGid])
+                                                .useCache(false).one()
+                                        if (shopifyShopProduct) {
+                                            variantIds.add([variant.id, sequenceIndex])
+                                            sequenceIndex++
+                                        }
                                     }
                                 }
 
@@ -321,8 +328,15 @@ under the License.
                                 .parameters([variantJson: variant, systemMessageId: systemMessageId, shopId: shopId])
                                 .call()
                             if (variant?.id) {
-                                variantIds.add([variant.id, sequenceIndex])  // Add variant with sequence index
-                                sequenceIndex++
+                                // Verify if the variant is already imported in the OMS
+                                def variantGid = co.hotwax.sob.shopify.ShopifyHelper.resolveShopifyGid(variant.id)
+                                def shopifyShopProduct = ec.entity.find("co.hotwax.shopify.ShopifyShopProduct")
+                                    .condition([shopId: shopId, shopifyProductId: variantGid])
+                                    .useCache(false).one()
+                                if (shopifyShopProduct) {
+                                    variantIds.add([variant.id, sequenceIndex])  // Add variant with sequence index
+                                    sequenceIndex++
+                                }
                             }
                         }
 
