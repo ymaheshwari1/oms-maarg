@@ -77,11 +77,11 @@
         <fields fieldSeqId="14" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:org.apache.ofbiz.shipment.shipment.ShipmentMethodType:description" fieldNameAlias="shipmentMethodDesc"/>
         <fields fieldSeqId="15" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingIdNumber" fieldNameAlias="trackingCode"/>
         <fields fieldSeqId="16" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment:trackingUrl" fieldNameAlias="trackingUrl"/>
-        <fields fieldSeqId="17" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:address1" fieldNameAlias="originAddress1"/>
-        <fields fieldSeqId="18" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:city" fieldNameAlias="originCity"/>
-        <fields fieldSeqId="19" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:stateProvinceGeoId" fieldNameAlias="originState"/>
-        <fields fieldSeqId="1a" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:postalAddress:postalCode" fieldNameAlias="originZipCode"/>
-        <fields fieldSeqId="1b" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:contactMechs:contactMechPurposeTypeId" fieldNameAlias="originContactMechPurposeTypeId"/>
+        <fields fieldSeqId="17" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:org.apache.ofbiz.product.facility.FacilityContactMech:org.apache.ofbiz.party.contact.ContactMech:org.apache.ofbiz.party.contact.PostalAddress:address1" fieldNameAlias="originAddress1"/>
+        <fields fieldSeqId="18" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:org.apache.ofbiz.product.facility.FacilityContactMech:org.apache.ofbiz.party.contact.ContactMech:org.apache.ofbiz.party.contact.PostalAddress:city" fieldNameAlias="originCity"/>
+        <fields fieldSeqId="19" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:org.apache.ofbiz.product.facility.FacilityContactMech:org.apache.ofbiz.party.contact.ContactMech:org.apache.ofbiz.party.contact.PostalAddress:stateProvinceGeoId" fieldNameAlias="originState"/>
+        <fields fieldSeqId="75" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:org.apache.ofbiz.product.facility.FacilityContactMech:org.apache.ofbiz.party.contact.ContactMech:org.apache.ofbiz.party.contact.PostalAddress:postalCode" fieldNameAlias="originZipCode"/>
+        <fields fieldSeqId="76" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Origin#org.apache.ofbiz.product.facility.Facility:org.apache.ofbiz.product.facility.FacilityContactMech:org.apache.ofbiz.product.facility.FacilityContactMechPurpose:contactMechPurposeTypeId" fieldNameAlias="originContactMechPurposeTypeId"/>
 
         <fields fieldSeqId="20" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderId"/>
         <fields fieldSeqId="21" fieldPath="org.apache.ofbiz.shipment.shipment.Shipment:Primary#org.apache.ofbiz.order.order.OrderHeader:orderName" fieldNameAlias="orderName"/>
@@ -119,10 +119,9 @@
         <relAliases relationshipName="org.apache.ofbiz.order.order.OrderShipment" documentAlias="orderShipments"/>
         <relAliases relationshipName="paymentPreferences" documentAlias="paymentPrefs"/>
         <relAliases relationshipName="contactMechs" documentAlias="billContacts"/>
-        <relAliases relationshipName="adjustments" documentAlias="adjustments"/>
         <relAliases relationshipName="org.apache.ofbiz.shipment.shipment.ShipmentItem" documentAlias="items"/>
         <relAliases relationshipName="org.apache.ofbiz.shipment.shipment.ShipmentRouteSegment" documentAlias="routeSegments"/>
-
+        <relAliases relationshipName="org.apache.ofbiz.product.facility.FacilityContactMech" documentAlias="facilityAddress"/>
     </dataDocuments>
 
     <dataDocuments dataDocumentId="WebhookOrderItem" documentName="WebhookOrderItem"

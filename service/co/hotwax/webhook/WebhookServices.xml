@@ -97,7 +97,7 @@
                     <service-call name="create#moqui.service.message.SystemMessage" out-map="createSmsgOut"
                                   transaction="force-new"
                                   in-map="[systemMessageTypeId: 'WebhookNotification',
-                                           messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced',
+                                           messageText: messageText, remoteMessageId: eventId, statusId: 'SmsgProduced', orderId: orderId,
                                            docControl: (orderId ?: shipmentId)]"/>
 
                     <!-- 5. Send synchronously to avoid async race where SystemMessage is still uncommitted -->
@@ -256,6 +256,15 @@
                 <parameter name="orderName"/>
                 <parameter name="orderItemSeqId"/>
                 <parameter name="orderTypeId"/>
+                <parameter name="grandTotal"/>
+                <parameter name="productName"/>
+                <parameter name="orderHeaderStatusId"/>
+                <parameter name="orderStatusId"/>
+                <parameter name="orderEntryDate"/>
+                <!-- Common Shipment Info -->
+                <parameter name="shipmentMethodDesc"/>
+                <parameter name="shipmentMethodTypeId"/>
+                <parameter name="shipmentStatusId"/>
                 <!-- Events -->
                 <parameter name="eventDate"/>
                 <parameter name="eventStatusId"/>
@@ -267,6 +276,9 @@
                 <parameter name="itemStatusId"/>
                 <parameter name="eventShipmentStatusId"/>
                 <parameter name="shipmentId"/>
+                <parameter name="eventStatusUserLogin"/>
+                <parameter name="statusUserLogin"/>
+                <parameter name="createdBy"/>
                 <!-- Facilities & Locations -->
                 <parameter name="originFacilityId"/>
                 <parameter name="facilityName"/>
@@ -274,11 +286,16 @@
                 <parameter name="storeName"/>
                 <parameter name="currencyUom"/>
                 <parameter name="salesChannelDesc"/>
+                <parameter name="countryGeoId"/>
+                <parameter name="defaultLocaleString"/>
                 <!-- Item Res -->
                 <parameter name="productId"/>
                 <parameter name="productIdInternal"/>
                 <parameter name="sku"/>
                 <parameter name="upc"/>
+                <parameter name="itemShipGroupSeqId"/>
+                <parameter name="rejectionReasonId"/>
+                <parameter name="varianceReasonEnumId"/>
                 <!-- Collections -->
                 <parameter name="shipGroups" type="List"><parameter name="shipGroup" type="Map"/></parameter>
                 <parameter name="items" type="List"><parameter name="item" type="Map"/></parameter>
@@ -289,6 +306,8 @@
                 <parameter name="adjustments" type="List"><parameter name="adjustment" type="Map"/></parameter>
                 <parameter name="identifications" type="List"><parameter name="identification" type="Map"/></parameter>
                 <parameter name="itemRes" type="List"><parameter name="resource" type="Map"/></parameter>
+                <parameter name="routeSegments" type="List"><parameter name="routeSegment" type="Map"/></parameter>
+                <parameter name="facilityAddress" type="List"/>
             </parameter>
             <parameter name="feedStamp" type="Timestamp"/>
         </in-parameters>
@@ -477,6 +496,8 @@
                                 status: doc.eventStatusId,
                                 userId: doc.eventUserLoginId ?: ec.user.userId ?: 'system',
                                 shippingMethod: shippingMethod,
+                                trackingCode: doc.routeSegments[0]?.trackingCode,
+                                trackingUrl: doc.routeSegments[0]?.trackingUrl,
                                 eventDate: ec.l10n.parseTimestamp((eventDate ?: ec.user.nowTimestamp), null)?.toInstant()?.toString()
                             ]"/>
                             
@@ -655,38 +676,31 @@
                 <if condition="!adjustmentList &amp;&amp; orderShipment">
                     <set field="adjustmentList" from="orderShipment.adjustments"/>
                 </if>
-                <set field="shippingCost" from="0"/>
+                <set field="shippingCost" value="0" type="BigDecimal"/>
                 <if condition="adjustmentList">
                     <iterate list="adjustmentList" entry="adjustment">
                         <if condition="adjustment.adjustmentTypeId == 'SHIPPING_CHARGES'">
-                            <set field="shippingCost" from="shippingCost + (adjustment.adjustmentAmount ?: 0)"/>
+                            <set field="shippingCost" from="shippingCost + (adjustment.adjustmentAmount ?: 0).toBigDecimal()"/>
                         </if>
                     </iterate>
                 </if>
-                
-                <set field="grandTotal" from="orderShipment?.grandTotal ?: doc.grandTotal ?: 0"/>
-                <set field="orderPrice" from="grandTotal - shippingCost"/>
-                <set field="countryCode" from="null"/>
-                <if condition="doc.countryGeoId">
-                    <set field="countryCode" from="doc.countryGeoId instanceof List ? doc.countryGeoId.find{it} : doc.countryGeoId"/>
-                </if>
-                <if condition="!countryCode &amp;&amp; shipGroup?.countryGeoId">
-                    <set field="countryCode" from="shipGroup.countryGeoId instanceof List ? shipGroup.countryGeoId.find{it} : shipGroup.countryGeoId"/>
-                </if>
-                <if condition="!countryCode">
-                    <set field="defaultLocaleString" from="orderShipment?.defaultLocaleString ?: doc.defaultLocaleString"/>
-                    <if condition="defaultLocaleString">
-                        <set field="countryCode" from="defaultLocaleString.substring(defaultLocaleString.length()-2)"/>
-                    </if>
-                </if>
-                
+
+                <set field="grandTotal" from="orderShipment?.grandTotal ?: doc.grandTotal ?: 0" type="BigDecimal"/>
+                <set field="orderPrice" from="grandTotal - shippingCost" type="BigDecimal"/>
+                <entity-find-one entity-name="org.apache.ofbiz.order.order.OrderHeader" value-field="orderHeader">
+                    <field-map field-name="orderId"/>
+                </entity-find-one>
+                <entity-find entity-name="co.hotwax.shopify.ShopifyShop" list="shopifyShops">
+                    <econdition field-name="productStoreId" from="orderHeader.productStoreId"/>
+                </entity-find>
+
                 <!-- Shared Fields Merge -->
                 <script><![CDATA[
                     payload.putAll([
                         facilityId: shipGroup?.facilityId ?: doc.originFacilityId,
                         facilityName: shipGroup?.facilityName ?: doc.facilityName,
                         brand: orderShipment?.storeName ?: doc.storeName,
-                        country: countryCode,
+                        country: shopifyShops ? shopifyShops[0].countryCode : 'US',
                         channel: orderShipment?.salesChannelDesc ?: doc.salesChannelDesc,
                         paymentType: paymentPref?.paymentMethodDesc,
                         billTo: billContact?.billToName ?: billToNameFallback,
@@ -711,8 +725,8 @@
                     // Add Store Ship From Address
                     if (docType == 'WebhookShipmentStatus' || shipmentId) {
                         payload.put('shipFromAddress', [
-                            storeName: payload.brand,
-                            address: doc.originAddress1
+                            storeName: doc.storeName,
+                            address: doc?.facilityAddress[0]?.originAddress1
                         ])
                     }
                     if (!payload.shippingMethod) payload.put('shippingMethod', shipGroup?.shipmentMethodDesc ?: shipGroup?.shipmentMethodTypeId)
@@ -782,5 +796,5 @@
 
             </if>
         </actions>
-    </service>    
+    </service>
 </services>
