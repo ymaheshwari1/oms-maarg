@@ -153,7 +153,11 @@ under the License.
                         stateProvinceGeoId: mech.postalAddress.stateProvinceGeoId,
                         postalCode: mech.postalAddress.postalCode,
                         countryGeoId: mech.postalAddress.countryGeoId,
-                        phoneNumber: mech.telecomNumber?.contactNumber
+                        phoneNumber: (
+                            (mech.telecomNumber?.countryCode ?: '') +
+                            (mech.telecomNumber?.areaCode ?: '') +
+                            (mech.telecomNumber?.contactNumber ?: '')
+                        )
                     ]"/>
                 </if>
                 <if condition="mech.contactMechPurposeTypeId == 'BILLING_LOCATION' &amp;&amp; mech.postalAddress">
@@ -165,7 +169,11 @@ under the License.
                         stateProvinceGeoId: mech.postalAddress.stateProvinceGeoId,
                         postalCode: mech.postalAddress.postalCode,
                         countryGeoId: mech.postalAddress.countryGeoId,
-                        phoneNumber: mech.telecomNumber?.contactNumber
+                        phoneNumber: (
+                            (mech.telecomNumber?.countryCode ?: '') +
+                            (mech.telecomNumber?.areaCode ?: '') +
+                            (mech.telecomNumber?.contactNumber ?: '')
+                        )
                     ]"/>
                 </if>
             </iterate>
