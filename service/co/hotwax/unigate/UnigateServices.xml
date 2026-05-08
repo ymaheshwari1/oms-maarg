@@ -176,7 +176,7 @@
         </out-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'shipGatewayAuth']" out-map="context"/>
+                          in-map="[path: 'shippingGatewayAuth']" out-map="context"/>
             <set field="shipAuthList" from="response"/>
         </actions>
     </service>
@@ -195,7 +195,7 @@
         <actions>
             <set field="requestBody" from="[shippingGatewayAuthId:shippingGatewayAuthId, shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'shipGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'shippingGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -213,7 +213,7 @@
         <actions>
             <set field="requestBody" from="[shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'shipGatewayAuth/' + shippingGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
+                          in-map="[path: 'shippingGatewayAuth/' + shippingGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
         </actions>
     </service>
 
@@ -223,7 +223,7 @@
         </in-parameters>
         <actions>
             <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
-                          in-map="[path: 'shipGatewayAuth/' + shippingGatewayAuthId, method:'DELETE']" out-map="context"/>
+                          in-map="[path: 'shippingGatewayAuth/' + shippingGatewayAuthId, method:'DELETE']" out-map="context"/>
         </actions>
     </service>
 
