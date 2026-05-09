@@ -629,10 +629,7 @@ under the License.
             </resource>
         </id>
     </resource>
-
-    <!-- Note: PRDS_EMAIL email-type enumerations are served by the existing
-         admin/enums?enumTypeId=PRDS_EMAIL endpoint; no dedicated resource needed here. -->
-
+          
     <resource name="transferOrders">
         <method type="get"><service name="co.hotwax.orderledger.order.TransferOrderServices.get#TransferOrders"/></method>
         <method type="post">
