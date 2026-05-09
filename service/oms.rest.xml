@@ -599,6 +599,42 @@ under the License.
         </id>
     </resource>
 
+    <!-- Communication Gateway Auths (Klaviyo, etc.) — proxied through UnigateServices to Unigate -->
+    <resource name="commGatewayAuths" description="CommGatewayAuth records stored in Unigate. List/create/update/delete is proxied through OMS UnigateServices.">
+        <method type="get"><service name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths"/></method>
+        <method type="post"><service name="co.hotwax.unigate.UnigateServices.create#CommGatewayAuth"/></method>
+        <id name="commGatewayAuthId">
+            <method type="post"><service name="co.hotwax.unigate.UnigateServices.update#CommGatewayAuth"/></method>
+            <method type="delete"><service name="co.hotwax.unigate.UnigateServices.delete#CommGatewayAuth"/></method>
+        </id>
+    </resource>
+
+    <resource name="commGatewayConfigs" description="Available comm gateway configurations (KLAVIYO, etc.).">
+        <method type="get"><service name="co.hotwax.unigate.UnigateServices.get#CommGatewayConfigs"/></method>
+    </resource>
+
+    <!-- ProductStoreEmailSetting — links a product store + emailType to a CommGatewayAuth (gatewayAuthId). -->
+    <resource name="productStoreEmailSettings" description="Per-product-store email notification configurations. Links emailType + productStore to a CommGatewayAuth.">
+        <method type="get"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="list"/></method>
+        <method type="post"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="store"/></method>
+        <id name="productStoreId">
+            <resource name="emailSettings">
+                <method type="get"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="list"/></method>
+                <method type="post"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="store"/></method>
+                <id name="emailType">
+                    <method type="get"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="one"/></method>
+                    <method type="put"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="store"/></method>
+                    <method type="delete"><entity name="org.apache.ofbiz.product.store.ProductStoreEmailSetting" operation="delete"/></method>
+                </id>
+            </resource>
+        </id>
+    </resource>
+
+    <!-- Email type enumerations (PRDS_EMAIL) — drives the list of supported email events. -->
+    <resource name="emailTypes" description="Available product store email types (PRDS_EMAIL enum). Used to render the list of configurable email events.">
+        <method type="get"><entity name="moqui.basic.Enumeration" operation="list"/></method>
+    </resource>
+
     <resource name="transferOrders">
         <method type="get"><service name="co.hotwax.orderledger.order.TransferOrderServices.get#TransferOrders"/></method>
         <method type="post">
