@@ -604,7 +604,7 @@ under the License.
         <method type="get"><service name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths"/></method>
         <method type="post"><service name="co.hotwax.unigate.UnigateServices.create#CommGatewayAuth"/></method>
         <id name="commGatewayAuthId">
-            <method type="post"><service name="co.hotwax.unigate.UnigateServices.update#CommGatewayAuth"/></method>
+            <method type="put"><service name="co.hotwax.unigate.UnigateServices.update#CommGatewayAuth"/></method>
             <method type="delete"><service name="co.hotwax.unigate.UnigateServices.delete#CommGatewayAuth"/></method>
         </id>
     </resource>
@@ -630,10 +630,8 @@ under the License.
         </id>
     </resource>
 
-    <!-- Email type enumerations (PRDS_EMAIL) — drives the list of supported email events. -->
-    <resource name="emailTypes" description="Available product store email types (PRDS_EMAIL enum). Used to render the list of configurable email events.">
-        <method type="get"><entity name="moqui.basic.Enumeration" operation="list"/></method>
-    </resource>
+    <!-- Note: PRDS_EMAIL email-type enumerations are served by the existing
+         admin/enums?enumTypeId=PRDS_EMAIL endpoint; no dedicated resource needed here. -->
 
     <resource name="transferOrders">
         <method type="get"><service name="co.hotwax.orderledger.order.TransferOrderServices.get#TransferOrders"/></method>
