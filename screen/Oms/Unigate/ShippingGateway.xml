@@ -54,12 +54,12 @@
             </entity-find>
             <service-call name="co.hotwax.unigate.UnigateServices.get#ShippingGatewayAuths" out-map="shipAuthOut"/>
             <set field="shipAuthList" from="shipAuthOut.shipAuthList"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.get#ShippingGatewayConfigs" out-map="shipConfigOut"/>
+            <set field="shipGatewayConfigList" from="shipConfigOut.shipGatewayConfigList"/>
             <entity-find entity-name="co.hotwax.shipment.shipment.ShippingCarrierBillingConfig" list="billingConfigList">
               <search-form-inputs input-fields-map="[tenantPartyId:partyId]" default-order-by="carrierPartyId"/>
             </entity-find>
         </if>
-        <service-call name="co.hotwax.unigate.UnigateServices.get#ShippingGatewayConfigs" out-map="shipConfigOut"/>
-        <set field="shipGatewayConfigList" from="shipConfigOut.shipGatewayConfigList"/>
     </actions>
 
     <widgets>
