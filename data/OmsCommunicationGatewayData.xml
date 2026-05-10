@@ -4,7 +4,6 @@
 
     <moqui.service.message.SystemMessageRemote systemMessageRemoteId="UNIGATE_CONFIG"
                                                description="Unigate tenant connection"
-                                               sendUrl="https://dev-unigate.hotwax.io/rest/s1/unigate/"
                                                publicKey=""
                                                internalId=""/>
 
