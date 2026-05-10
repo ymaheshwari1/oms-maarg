@@ -88,7 +88,7 @@
                                 </container-row>
                             </widgets>
                             <fail-widgets>
-                                <label text="Unigate Tenant is not configured. Please complete UNIGATE_CONFIG to manage gateway settings." style="text-danger"/>
+                                <label text="UNIGATE_CONFIG is incomplete. Please finish configuring Tenant ID, API Key, and Instance URL to manage gateway settings." style="text-danger"/>
                             </fail-widgets>
                         </section>
                     </box-body>
