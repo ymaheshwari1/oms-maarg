@@ -28,8 +28,8 @@
         <service-call name="co.hotwax.orderledger.order.email.EmailServices.create#EmailEvent"/>
         <default-response url="."/>
     </transition>
-    <transition name="createRemote">
-        <service-call name="create#moqui.service.message.SystemMessageRemote"/>
+    <transition name="storeRemote">
+        <service-call name="store#moqui.service.message.SystemMessageRemote"/>
         <default-response url="."/>
     </transition>
     <transition name="deleteEmailSetting">
@@ -45,7 +45,8 @@
         <set field="tenantPartyId" from="partyId"/>
         <set field="unigateKey" from="unigateConfig?.publicKey"/>
         <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
-        <if condition="partyId">
+        <set field="isUnigateConfigured" from="unigateConfig?.internalId &amp;&amp; unigateConfig?.publicKey &amp;&amp; unigateConfig?.sendUrl"/>
+        <if condition="isUnigateConfigured">
             <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths" out-map="commAuthOut"/>
             <set field="commAuthList" from="commAuthOut.commAuthList"/>
             <entity-find entity-name="org.apache.ofbiz.product.store.ProductStore" list="productStoreList"/>
@@ -66,8 +67,8 @@
                 <container-box>
                     <box-header title="Active Tenant"/>
                     <box-toolbar>
-                        <container-dialog id="setupTenant" button-text="Setup Tenant" title="Setup Unigate Tenant" condition="!unigateConfig">
-                            <form-single name="SetupTenant" transition="createRemote">
+                        <container-dialog id="setupTenant" button-text="Setup Tenant" title="Setup Unigate Tenant" condition="!isUnigateConfigured">
+                            <form-single name="SetupTenant" transition="storeRemote" map="unigateConfig">
                                 <field name="systemMessageRemoteId"><default-field><hidden default-value="UNIGATE_CONFIG"/></default-field></field>
                                 <field name="internalId"><default-field title="Tenant Id"><text-line/></default-field></field>
                                 <field name="description"><default-field title="Description"><text-line/></default-field></field>
@@ -78,7 +79,7 @@
                         </container-dialog>
                     </box-toolbar>
                     <box-body>
-                        <section name="TenantInfoSection" condition="partyId">
+                        <section name="TenantInfoSection" condition="isUnigateConfigured">
                             <widgets>
                                 <container-row>
                                     <row-col md="3"><label text="Tenant ID: " type="strong"/><label text="${partyId}"/></row-col>
@@ -87,7 +88,7 @@
                                 </container-row>
                             </widgets>
                             <fail-widgets>
-                                <label text="Unigate Tenant is not configured. Please configure it to manage gateway settings." style="text-danger"/>
+                                <label text="Unigate Tenant is not configured. Please complete UNIGATE_CONFIG to manage gateway settings." style="text-danger"/>
                             </fail-widgets>
                         </section>
                     </box-body>
@@ -95,7 +96,7 @@
             </row-col>
         </container-row>
 
-        <section name="GatewayDetails" condition="partyId">
+        <section name="GatewayDetails" condition="isUnigateConfigured">
             <widgets>
                 <container-row>
                     <row-col md="12">

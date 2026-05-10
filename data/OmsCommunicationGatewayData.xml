@@ -2,6 +2,14 @@
 
 <entity-facade-xml type="ext">
 
+    <moqui.service.message.SystemMessageRemote systemMessageRemoteId="UNIGATE_CONFIG"
+                                               description="Unigate tenant connection"
+                                               sendUrl="https://dev-unigate.hotwax.io/rest/s1/unigate/"
+                                               publicKey=""
+                                               internalId=""/>
+
+    <!-- EnumerationType for OMS system message type enum and relationship -->
+    <moqui.basic.EnumerationType description="OMS System Message Type Enum" enumTypeId="OMSMessageTypeEnum"/>
     <moqui.basic.Enumeration enumId="SendReadyForPickupEmail" description="Send Ready for Pickup Email" enumTypeId="OMSMessageTypeEnum"/>
     <moqui.basic.Enumeration enumId="SendBOPISRejectionEmail" description="Send BOPIS Rejection Email" enumTypeId="OMSMessageTypeEnum"/>
     <moqui.basic.Enumeration enumId="SendBOPISCancellationEmail" description="Send BOPIS Cancellation Email" enumTypeId="OMSMessageTypeEnum"/>

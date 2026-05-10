@@ -47,7 +47,8 @@
         <set field="tenantPartyId" from="partyId"/>
         <set field="unigateKey" from="unigateConfig?.publicKey"/>
         <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
-        <if condition="partyId">
+        <set field="isUnigateConfigured" from="unigateConfig?.internalId &amp;&amp; unigateConfig?.publicKey &amp;&amp; unigateConfig?.sendUrl"/>
+        <if condition="isUnigateConfigured">
             <entity-find entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" list="carrierConfigList">
                 <search-form-inputs input-fields-map="[tenantPartyId:partyId]" default-order-by="carrierPartyId"/>
             </entity-find>
@@ -67,7 +68,7 @@
                 <container-box>
                     <box-header title="Active Tenant"/>
                     <box-body>
-                        <section name="TenantInfoSection" condition="partyId">
+                        <section name="TenantInfoSection" condition="isUnigateConfigured">
                             <widgets>
                                 <container-row>
                                     <row-col md="3"><label text="Tenant ID: " type="strong"/><label text="${partyId}"/></row-col>
@@ -76,7 +77,7 @@
                                 </container-row>
                             </widgets>
                             <fail-widgets>
-                                <label text="UNIGATE_CONFIG record or Tenant ID (internalId) is missing in SystemMessageRemote. Please configure it to manage gateway settings." style="text-danger"/>
+                                <label text="UNIGATE_CONFIG is incomplete. Please finish configuring Tenant ID, API Key, and Instance URL to manage gateway settings." style="text-danger"/>
                             </fail-widgets>
                         </section>
                     </box-body>
@@ -84,7 +85,7 @@
             </row-col>
         </container-row>
 
-        <section name="GatewayDetails" condition="partyId">
+        <section name="GatewayDetails" condition="isUnigateConfigured">
             <widgets>
                 <container-row>
                     <row-col md="12">
