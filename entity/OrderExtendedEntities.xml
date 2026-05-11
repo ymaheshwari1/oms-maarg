@@ -66,6 +66,12 @@ under the License.
             <detail relationship="contents"/>
             <detail relationship="itemAssocs"/>
         </master>
+        <master name="notification">
+            <detail relationship="roles"/>
+            <detail relationship="shipGroups" use-master="default"/>
+            <detail relationship="contactMechs" use-master="default"/>
+            <detail relationship="adjustments" use-master="default"/>
+        </master>
     </extend-entity>
     <extend-entity entity-name="OrderItemShipGroup" package="org.apache.ofbiz.order.order">
         <relationship type="many" related="org.apache.ofbiz.order.order.OrderItem" short-alias="items">
