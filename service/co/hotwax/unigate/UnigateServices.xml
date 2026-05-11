@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="send" noun="UnigateRequest">
+        <in-parameters>
+            <parameter name="path" required="true"/>
+            <parameter name="method" default-value="GET"/>
+            <parameter name="body" type="Map"/>
+            <parameter name="systemMessageRemoteId" default-value="UNIGATE_CONFIG"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="response" type="Object"/>
+            <parameter name="statusCode" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="systemMessageRemote">
+                <field-map field-name="systemMessageRemoteId"/>
+            </entity-find-one>
+            <if condition="!systemMessageRemote">
+                <return error="true" message="Could not find SystemMessageRemote with ID ${systemMessageRemoteId}"/>
+            </if>
+            <if condition="!systemMessageRemote.sendUrl">
+                <return error="true" message="No sendUrl found in SystemMessageRemote with ID ${systemMessageRemoteId}"/>
+            </if>
+
+            <script><![CDATA[
+                import org.moqui.util.RestClient
+
+                RestClient restClient = ec.service.rest()
+                restClient.method(method)
+                
+                // Construct full URL
+                String url = systemMessageRemote.sendUrl
+                if (!url.endsWith("/")) url += "/"
+                url += path
+                restClient.uri(url)
+                restClient.addHeader("Content-Type", "application/json")
+
+                // Add Authorization header from SystemMessageRemote
+                String apiKey = systemMessageRemote.publicKey ?: systemMessageRemote.password
+                String tenantId = systemMessageRemote.internalId ?: systemMessageRemote.username
+                if (apiKey) restClient.addHeader("api_key", apiKey)
+                if (tenantId) restClient.addHeader("tenant_Id", tenantId)
+                
+                if (body != null && !body.isEmpty()) restClient.jsonObject(body)
+                
+                try {
+                    RestClient.RestResponse restResponse = restClient.call()
+                    statusCode = restResponse.getStatusCode()
+                    response = restResponse.jsonObject()
+
+                    if (restResponse.statusCode < 200 || restResponse.statusCode >= 300) {
+                        ec.message.addError("Unsuccessful with status code: ${statusCode} and response: ${response}")
+                    }
+                } catch (Exception e) {
+                    statusCode = 500
+                    response = e.getMessage()
+                    ec.message.addError("Error calling HTTP request to ${url}: ${response}")
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <!-- Tenant Management Services -->
+    <service verb="get" noun="Tenants">
+        <out-parameters>
+            <parameter name="tenantList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path:'tenants']" out-map="context"/>
+            <set field="tenantList" from="response"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="Tenant">
+        <in-parameters>
+            <parameter name="organizationName" required="true"/>
+            <parameter name="partyId"/>
+        </in-parameters>
+        <actions>
+            <set field="requestBody" from="[organizationName:organizationName, partyId:partyId]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path:'tenants', method:'POST', body:requestBody]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="generate" noun="LoginKey">
+        <in-parameters>
+            <parameter name="userLoginId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="loginKey"/>
+        </out-parameters>
+        <actions>
+            <set field="requestBody" from="[userLoginId:userLoginId]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path:'loginKey', method:'POST', body:requestBody]" out-map="context"/>
+            <set field="loginKey" from="response?.loginKey"/>
+        </actions>
+    </service>
+
+    <!-- Communication Setup Services -->
+    <service verb="get" noun="CommGatewayAuths">
+        <out-parameters>
+            <parameter name="commAuthList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'commGatewayAuth']" out-map="context"/>
+            <set field="commAuthList" from="response"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="CommGatewayAuth">
+        <in-parameters>
+            <parameter name="commGatewayAuthId"/>
+            <parameter name="commGatewayConfigId" required="true"/>
+            <parameter name="description"/>
+            <parameter name="baseUrl"/>
+            <parameter name="username"/>
+            <parameter name="password"/>
+            <parameter name="publicKey"/>
+            <parameter name="authHeaderName"/>
+        </in-parameters>
+        <actions>
+            <set field="requestBody" from="[commGatewayAuthId:commGatewayAuthId, commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'commGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="update" noun="CommGatewayAuth">
+        <in-parameters>
+            <parameter name="commGatewayAuthId" required="true"/>
+            <parameter name="commGatewayConfigId"/>
+            <parameter name="description"/>
+            <parameter name="baseUrl"/>
+            <parameter name="username"/>
+            <parameter name="password"/>
+            <parameter name="publicKey"/>
+            <parameter name="authHeaderName"/>
+        </in-parameters>
+        <actions>
+            <set field="requestBody" from="[commGatewayConfigId:commGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'commGatewayAuth/' + commGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="CommGatewayAuth">
+        <in-parameters>
+            <parameter name="commGatewayAuthId" required="true"/>
+        </in-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'commGatewayAuth/' + commGatewayAuthId, method:'DELETE']" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="get" noun="CommGatewayConfigs">
+        <out-parameters>
+            <parameter name="commConfigList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path:'commGatewayConfig']" out-map="context"/>
+            <set field="commConfigList" from="response"/>
+        </actions>
+    </service>
+
+    <!-- Shipping Setup Services -->
+    <service verb="get" noun="ShippingGatewayAuths">
+        <out-parameters>
+            <parameter name="shipAuthList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'shippingGatewayAuth']" out-map="context"/>
+            <set field="shipAuthList" from="response"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="ShippingGatewayAuth">
+        <in-parameters>
+            <parameter name="shippingGatewayAuthId"/>
+            <parameter name="shippingGatewayConfigId" required="true"/>
+            <parameter name="description"/>
+            <parameter name="baseUrl"/>
+            <parameter name="username"/>
+            <parameter name="password"/>
+            <parameter name="publicKey"/>
+            <parameter name="authHeaderName"/>
+        </in-parameters>
+        <actions>
+            <set field="requestBody" from="[shippingGatewayAuthId:shippingGatewayAuthId, shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'shippingGatewayAuth', method:'POST', body:requestBody]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="update" noun="ShippingGatewayAuth">
+        <in-parameters>
+            <parameter name="shippingGatewayAuthId" required="true"/>
+            <parameter name="shippingGatewayConfigId"/>
+            <parameter name="description"/>
+            <parameter name="baseUrl"/>
+            <parameter name="username"/>
+            <parameter name="password"/>
+            <parameter name="publicKey"/>
+            <parameter name="authHeaderName"/>
+        </in-parameters>
+        <actions>
+            <set field="requestBody" from="[shippingGatewayConfigId:shippingGatewayConfigId, description:description, baseUrl:baseUrl, username:username, password:password, publicKey:publicKey, authHeaderName:authHeaderName]"/>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'shippingGatewayAuth/' + shippingGatewayAuthId, method:'POST', body:requestBody]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="ShippingGatewayAuth">
+        <in-parameters>
+            <parameter name="shippingGatewayAuthId" required="true"/>
+        </in-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path: 'shippingGatewayAuth/' + shippingGatewayAuthId, method:'DELETE']" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="get" noun="ShippingGatewayConfigs">
+        <out-parameters>
+            <parameter name="shipGatewayConfigList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call name="co.hotwax.unigate.UnigateServices.send#UnigateRequest" 
+                          in-map="[path:'shippingGatewayConfig']" out-map="context"/>
+            <set field="shipGatewayConfigList" from="response"/>
+        </actions>
+    </service>
+
+</services>
