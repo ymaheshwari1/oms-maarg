@@ -47,7 +47,7 @@
         <set field="tenantPartyId" from="partyId"/>
         <set field="unigateKey" from="unigateConfig?.publicKey"/>
         <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
-        <set field="isUnigateConfigured" from="unigateConfig?.internalId &amp;&amp; unigateConfig?.publicKey &amp;&amp; unigateConfig?.sendUrl"/>
+        <set field="isUnigateConfigured" from="partyId &amp;&amp; unigateKey &amp;&amp; unigateUrl"/>
         <if condition="isUnigateConfigured">
             <entity-find entity-name="co.hotwax.shipment.shipment.ShippingCarrierConfig" list="carrierConfigList">
                 <search-form-inputs input-fields-map="[tenantPartyId:partyId]" default-order-by="carrierPartyId"/>

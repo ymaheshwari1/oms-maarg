@@ -45,7 +45,7 @@
         <set field="tenantPartyId" from="partyId"/>
         <set field="unigateKey" from="unigateConfig?.publicKey"/>
         <set field="unigateUrl" from="unigateConfig?.sendUrl"/>
-        <set field="isUnigateConfigured" from="unigateConfig?.internalId &amp;&amp; unigateConfig?.publicKey &amp;&amp; unigateConfig?.sendUrl"/>
+        <set field="isUnigateConfigured" from="partyId &amp;&amp; unigateKey &amp;&amp; unigateUrl"/>
         <if condition="isUnigateConfigured">
             <service-call name="co.hotwax.unigate.UnigateServices.get#CommGatewayAuths" out-map="commAuthOut"/>
             <set field="commAuthList" from="commAuthOut.commAuthList"/>
