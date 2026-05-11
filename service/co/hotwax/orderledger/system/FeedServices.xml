@@ -212,8 +212,15 @@ under the License.
                                         .call()
 
                                     if (variant?.id) {
-                                        variantIds.add([variant.id, sequenceIndex])
-                                        sequenceIndex++
+                                        // Verify if the variant is already imported in the OMS
+                                        def variantGid = co.hotwax.sob.shopify.ShopifyHelper.resolveShopifyGid(variant.id)
+                                        def shopifyShopProduct = ec.entity.find("co.hotwax.shopify.ShopifyShopProduct")
+                                                .condition([shopId: shopId, shopifyProductId: variantGid])
+                                                .useCache(false).one()
+                                        if (shopifyShopProduct) {
+                                            variantIds.add([variant.id, sequenceIndex])
+                                            sequenceIndex++
+                                        }
                                     }
                                 }
 
@@ -321,8 +328,15 @@ under the License.
                                 .parameters([variantJson: variant, systemMessageId: systemMessageId, shopId: shopId])
                                 .call()
                             if (variant?.id) {
-                                variantIds.add([variant.id, sequenceIndex])  // Add variant with sequence index
-                                sequenceIndex++
+                                // Verify if the variant is already imported in the OMS
+                                def variantGid = co.hotwax.sob.shopify.ShopifyHelper.resolveShopifyGid(variant.id)
+                                def shopifyShopProduct = ec.entity.find("co.hotwax.shopify.ShopifyShopProduct")
+                                    .condition([shopId: shopId, shopifyProductId: variantGid])
+                                    .useCache(false).one()
+                                if (shopifyShopProduct) {
+                                    variantIds.add([variant.id, sequenceIndex])  // Add variant with sequence index
+                                    sequenceIndex++
+                                }
                             }
                         }
 
@@ -514,27 +528,6 @@ under the License.
                     <field-map field-name="settingTypeEnumId" value="PROD_CAT_ATTR"/>
                 </entity-find-one>
 
-                <if condition="productCategoryAttribute &amp;&amp; productCategoryAttribute.settingValue == 'Y' &amp;&amp; diff.category">
-                    <!-- Upsert logic: check if already exists -->
-                    <entity-find-one entity-name="org.apache.ofbiz.product.product.ProductAttribute" value-field="existingAttr">
-                        <field-map field-name="productId" from="productId"/>
-                        <field-map field-name="attrName" value="Category"/>
-                    </entity-find-one>
-
-                    <if condition="existingAttr">
-                        <!-- Update value if different -->
-                        <if condition="existingAttr.attrValue != diff.category || existingAttr.attrType != 'Category'">
-                            <service-call name="update#org.apache.ofbiz.product.product.ProductAttribute"
-                                          in-map="[productId:productId, attrName:'Category', attrValue:diff.category]"/>
-                        </if>
-                        <else>
-                            <!-- Create new ProductAttribute -->
-                            <service-call name="create#org.apache.ofbiz.product.product.ProductAttribute"
-                                          in-map="[productId:productId, attrName:'Category', attrValue:diff.category]"/>
-                        </else>
-                    </if>
-                </if>
-
                 <!-- Skip updating product type if product is updated -->
                 <if condition="(!skipProductTypeUpdate || !hasUpdate) &amp;&amp; diff.title">
                     <set field="product.productTypeId" value="FINISHED_GOOD"/>
@@ -572,6 +565,11 @@ under the License.
                 <service-call name="store#org.apache.ofbiz.product.product.Product"
                               in-map="product" out-map="prodOut"/>
                 <set field="productId" from="productId ?: prodOut.productId"/>
+
+                <if condition="productCategoryAttribute &amp;&amp; productCategoryAttribute.settingValue == 'Y' &amp;&amp; diff.category">
+                    <service-call name="store#org.apache.ofbiz.product.product.ProductAttribute"
+                                  in-map="[productId:productId, attrName:'Category', attrValue:diff.category]"/>
+                </if>
 
                 <if condition="catResp.categoryId">
                     <entity-find entity-name="org.apache.ofbiz.product.category.ProductCategoryMember" list="productCategoryMember" limit="1">
