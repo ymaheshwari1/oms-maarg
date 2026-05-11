@@ -99,8 +99,10 @@ the source index at the bottom of this file.
 - Use `cache="true"` for stable reference data where the surrounding codebase
   already treats that entity as cacheable. [D240-CACHE](https://github.com/hotwax/oms/pull/240#discussion_r2253734823)
 - Search behavior should be intentional. Avoid `%keyword%` contains searches on
-  large datasets unless the PR justifies the cost. Prefer begins-with or
-  ends-with patterns that can use indexes when possible. [D343-LIKE](https://github.com/hotwax/oms/pull/343#discussion_r2583621511)
+  large datasets unless the PR justifies the cost. Prefer prefix searches such
+  as `keyword%` when a normal index should be used. Only recommend suffix or
+  fuzzy matching when a dedicated reverse, full-text, or trigram index exists.
+  [D343-LIKE](https://github.com/hotwax/oms/pull/343#discussion_r2583621511)
 - Avoid repetitive field-by-field copy logic when iterating over known changed
   keys or a diff map would produce the same result more simply and safely.
   [A220-DIFF](https://github.com/hotwax/oms/pull/220#discussion_r2182741089)
