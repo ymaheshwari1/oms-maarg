@@ -1140,7 +1140,7 @@ under the License.
 
             <!-- TODO: Move this to SECA: Set the facility and fulfillment status in solr doc -->
             <service-call name="co.hotwax.poorti.FulfillmentServices.update#OrderItemFulfillmentStatus"
-                          in-map="[orderId:orderId,orderItemSeqId:orderItemSeqId,facilityId:rejectToFacilityId,fulfillmentStatus:'Rejected']"/>
+                          in-map="[orderId:orderId,orderItemSeqId:orderItemSeqId,facilityId:rejectToFacilityId,fulfillmentStatus:'Rejected']" ignore-error="true"/>
             <!--6. Record inventory variance-->
             <entity-find-one entity-name="moqui.basic.Enumeration" value-field="rejectionEnum" cache="true">
                 <field-map field-name="enumId" from="rejectionReasonId"/>
