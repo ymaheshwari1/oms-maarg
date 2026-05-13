@@ -141,4 +141,13 @@
             </if>
         </actions>
     </seca>
+
+    <!-- Update Solr fulfillment status after order item rejection. Runs on tx-commit to decouple non-critical search indexing from the main rejection transaction.
+         ignore-error="true" prevents transient Solr failures from surfacing as errors. -->
+    <seca id="OrderItemRejectedSolrUpdate" service="co.hotwax.oms.order.OrderServices.reject#OrderItem" when="tx-commit">
+        <actions>
+            <service-call name="co.hotwax.poorti.FulfillmentServices.update#OrderItemFulfillmentStatus"
+                          in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId, facilityId:rejectToFacilityId, fulfillmentStatus:'Rejected']" ignore-error="true"/>
+        </actions>
+    </seca>
 </secas>
