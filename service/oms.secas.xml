@@ -141,4 +141,10 @@
             </if>
         </actions>
     </seca>
+
+    <seca id="OrderItemRejectedSolrUpdate" service="co.hotwax.oms.order.OrderServices.reject#OrderItem" when="tx-commit">
+        <actions>
+            <service-call name="co.hotwax.poorti.FulfillmentServices.update#OrderItemFulfillmentStatus" in-map="[orderId:orderId, orderItemSeqId:orderItemSeqId, facilityId:rejectToFacilityId, fulfillmentStatus:'Rejected']"/>
+        </actions>
+    </seca>
 </secas>
