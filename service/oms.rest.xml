@@ -721,4 +721,33 @@ under the License.
             <service name="co.hotwax.oms.product.InventoryServices.get#ProductOnlineAtp"/>
         </method>
     </resource>
+
+    <resource name="productFacility">
+        <method type="get">
+            <service name="co.hotwax.oms.common.CommonServices.search#ProductFacility"/>
+        </method>
+        <method type="post">
+            <entity name="org.apache.ofbiz.product.facility.ProductFacility" operation="store"/>
+        </method>
+    </resource>
+
+    <resource name="inventoryLogs">
+        <method type="get">
+            <entity name="org.apache.ofbiz.product.inventory.InventoryItem" operation="list"/>
+        </method>
+        <method type="post">
+            <entity name="org.apache.ofbiz.product.facility.ProductFacility" operation="store"/>
+        </method>
+    </resource>
+
+    <resource name="inventoryItem">
+        <resource name="detail">
+            <method type="get">
+                <entity name="org.apache.ofbiz.product.inventory.InventoryItemAndDetail" operation="list"/>
+            </method>
+        </resource>
+        <method type="post">
+            <entity name="org.apache.ofbiz.product.inventory.InventoryItem" operation="store"/>
+        </method>
+    </resource>
 </resource>

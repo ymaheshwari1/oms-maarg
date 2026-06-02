@@ -113,4 +113,106 @@ under the License.
             </if>
         </actions>
     </service>
+
+    <service verb="get" noun="ProductFacility">
+        <in-parameters>
+            <parameter name="facilityId" type="string" required="true"/>
+            <parameter name="productId" type="string"/>
+            <parameter name="pageSize" type="Integer" default-value="20"/>
+            <parameter name="pageIndex" type="Integer" default-value="0"/>
+            <parameter name="fieldsToSelect"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productFacilities" type="List"/>
+            <parameter name="count" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="org.apache.ofbiz.product.facility.ProductFacility" limit="pageSize" offset="pageIndex" list="productFacilities" distinct="true">
+                <search-form-inputs />
+            </entity-find>
+        </actions>
+    </service>
+
+    <service verb="search" noun="ProductFacility">
+        <description>
+            Search products for a given facility using Solr and enrich the results with ProductFacility data.
+            Supports keyword search and pagination.
+        </description>
+        <in-parameters>
+            <parameter name="facilityId" required="true"/>
+            <parameter name="keyword"/>
+            <parameter name="pageIndex" type="Integer" default-value="0"/>
+            <parameter name="pageSize" type="Integer" default-value="20"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="products" type="List"/>
+            <parameter name="totalCount" type="Integer"/>
+            <parameter name="pageIndex" type="Integer"/>
+            <parameter name="pageSize" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <set field="products" from="[]"/>
+            <set field="totalCount" from="0"/>
+
+            <!-- Solr is the primary source in both cases.
+                 Without keyword: query all products, then filter to only those with a ProductFacility record.
+                 With keyword: query by keyword, return all results enriched with ProductFacility where it exists. -->
+            <set field="filterConditions" from="['docType:PRODUCT']"/>
+            <set field="solrQuery" value="*:*"/>
+            <if condition="keyword">
+                <set field="solrQuery" value="(productId:*${keyword}* OR productName:*${keyword}* OR internalName:*${keyword}* OR sku_s:*${keyword}*)"/>
+            </if>
+
+            <set field="solrStart" from="(pageIndex ?: 0) * (pageSize ?: 20)" type="Integer"/>
+            <set field="params" from="[rows: (pageSize ?: 20), start: solrStart]"/>
+            <set field="queryObject" from="[query: solrQuery, filter: filterConditions, params: params]"/>
+
+            <service-call name="co.hotwax.search.SearchServices.run#SolrQuery"
+                          in-map="[json: queryObject]"
+                          out-map="solrResult"/>
+
+            <if condition="solrResult &amp;&amp; solrResult.response">
+                <set field="solrDocs" from="solrResult.response.docs ?: []"/>
+
+                <script>productIds = solrDocs.collect { it.productId }.findAll { it }</script>
+
+                <entity-find entity-name="org.apache.ofbiz.product.facility.ProductFacility" list="productFacilityList">
+                    <econdition field-name="facilityId" from="facilityId"/>
+                    <econdition field-name="productId" operator="in" from="productIds"/>
+                </entity-find>
+
+                <script>
+                    productFacilityMap = productFacilityList.collectEntries { [(it.productId): it] }
+
+                    if (keyword) {
+                        // With keyword: return all Solr docs, enrich with ProductFacility where it exists
+                        products = solrDocs.collect { doc ->
+                            Map enriched = new HashMap(doc)
+                            def pf = productFacilityMap[doc.productId]
+                            if (pf) {
+                                enriched.minimumStock       = pf.minimumStock
+                                enriched.reorderQuantity    = pf.reorderQuantity
+                                enriched.daysToShip         = pf.daysToShip
+                                enriched.lastInventoryCount = pf.lastInventoryCount
+                            }
+                            enriched
+                        }
+                        totalCount = solrResult.response.numFound ?: 0
+                    } else {
+                        // No keyword: return only docs that have a ProductFacility record
+                        products = solrDocs.findAll { doc -> productFacilityMap.containsKey(doc.productId) }.collect { doc ->
+                            Map enriched = new HashMap(doc)
+                            def pf = productFacilityMap[doc.productId]
+                            enriched.minimumStock       = pf.minimumStock
+                            enriched.reorderQuantity    = pf.reorderQuantity
+                            enriched.daysToShip         = pf.daysToShip
+                            enriched.lastInventoryCount = pf.lastInventoryCount
+                            enriched
+                        }
+                        totalCount = products.size()
+                    }
+                </script>
+            </if>
+        </actions>
+    </service>
 </services>
